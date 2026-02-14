@@ -1,10 +1,24 @@
+import { AppProvider } from './state/AppContext'
+import { NotificationProvider } from './components/layout/NotificationArea'
+import { Header } from './components/layout/Header'
+import { Sidebar } from './components/layout/Sidebar'
+import { GraphCanvas } from './components/graph/GraphCanvas'
+
 function App() {
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-50">
-      <h1 className="text-2xl font-semibold text-gray-700">
-        NFA to Regex Converter
-      </h1>
-    </div>
+    <AppProvider>
+      <NotificationProvider>
+        <div className="h-screen flex flex-col">
+          <Header />
+          <div className="flex flex-1 overflow-hidden">
+            <Sidebar />
+            <main className="flex-1 relative">
+              <GraphCanvas />
+            </main>
+          </div>
+        </div>
+      </NotificationProvider>
+    </AppProvider>
   )
 }
 
