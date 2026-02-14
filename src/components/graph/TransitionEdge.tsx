@@ -35,9 +35,29 @@ function TransitionEdgeComponent({
   const isSelfLoop = source === target
 
   if (isSelfLoop) {
-    // Render self-loop as an arc above the node
-    const loopSize = 30
-    const path = `M ${sourceX} ${sourceY - 32} C ${sourceX - loopSize} ${sourceY - 70}, ${sourceX + loopSize} ${sourceY - 70}, ${sourceX} ${sourceY - 32}`
+    // For self-loops: sourceX/Y is right handle, targetX/Y is left handle
+    // Calculate the actual center of the node from handle positions
+    const centerX = (sourceX + targetX) / 2
+    const centerY = sourceY // Both handles are at same Y level
+    
+    const nodeRadius = 32
+    const loopHeight = 40
+    const loopWidth = 30
+    
+    // Top of the node circle
+    const topOfNode = centerY - nodeRadius
+    
+    // Start and end points at the top curve of the node
+    const startX = centerX - 12
+    const endX = centerX + 12
+    
+    // SVG cubic bezier: smooth loop arc above the node
+    const path = `
+      M ${startX} ${topOfNode}
+      C ${startX - loopWidth} ${topOfNode - loopHeight},
+        ${endX + loopWidth} ${topOfNode - loopHeight},
+        ${endX} ${topOfNode}
+    `
 
     return (
       <>
@@ -54,7 +74,7 @@ function TransitionEdgeComponent({
           <div
             className="absolute pointer-events-all nodrag nopan"
             style={{
-              transform: `translate(-50%, -50%) translate(${sourceX}px, ${sourceY - 75}px)`,
+              transform: `translate(-50%, -50%) translate(${centerX}px, ${topOfNode - loopHeight - 8}px)`,
             }}
           >
             <span
