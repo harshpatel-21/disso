@@ -152,7 +152,7 @@ export function nfaReducer(state: NFAState, action: NFAAction): NFAState {
     case 'LOAD_NFA':
       return {
         ...state,
-        nfa: action.payload,
+        nfa: action.payload, // this may need to be changed depending on how we want to handle loading (eg may need to read in from file and validate first)
         validationErrors: [],
       }
 

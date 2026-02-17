@@ -35,12 +35,12 @@ export function removeState(nfa: NFA, stateId: StateId): NFA {
 export function updateState(
   nfa: NFA,
   stateId: StateId,
-  updates: Partial<State>
+  stateUpdates: Partial<State>
 ): NFA {
   return {
     ...nfa,
     states: nfa.states.map((s) =>
-      s.id === stateId ? { ...s, ...updates } : s
+      s.id === stateId ? { ...s, ...stateUpdates } : s
     ),
   }
 }
