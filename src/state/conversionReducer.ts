@@ -32,6 +32,7 @@ export type ConversionAction =
   | { type: 'GO_TO_STEP'; payload: number }
   | { type: 'AUTO_COMPLETE_PATH'; payload: number }
   | { type: 'SET_HIGHLIGHTED_R'; payload: 'R1' | 'R2' | 'R3' | 'R4' | null }
+  | { type: 'BACK_TO_STATE_SELECTION' }
   | { type: 'RESET_CONVERSION' }
 
 export const initialConversionState: ConversionState = {
@@ -154,6 +155,15 @@ export function conversionReducer(
 
     case 'SET_HIGHLIGHTED_R':
       return { ...state, highlightedR: action.payload }
+
+    case 'BACK_TO_STATE_SELECTION':
+      return {
+        ...state,
+        phase: 'selecting-state',
+        stateToRemove: null,
+        currentPathUpdates: [],
+        currentPathIndex: 0,
+      }
 
     case 'RESET_CONVERSION':
       return { ...initialConversionState }

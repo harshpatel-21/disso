@@ -136,6 +136,10 @@ export function useConversion() {
     [conversionDispatch]
   )
 
+  const backToStateSelection = useCallback(() => {
+    conversionDispatch({ type: 'BACK_TO_STATE_SELECTION' })
+  }, [conversionDispatch])
+
   const resetConversion = useCallback(() => {
     conversionDispatch({ type: 'RESET_CONVERSION' })
     nfaDispatch({ type: 'SET_NFA_TO_REGEX_PHASE', payload: 'input' })
@@ -156,6 +160,7 @@ export function useConversion() {
     completeElimination,
     goToStep,
     setHighlightedR,
+    backToStateSelection,
     resetConversion,
   }
 }

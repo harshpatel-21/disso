@@ -72,4 +72,28 @@ export const examples: NFAExample[] = [
       alphabet: ['a'],
     },
   },
+  {
+    name: 'Temp Example',
+    description: 'Complex example with epsilon, self-loops and dead-states',
+    nfa: {
+      states: [
+        { id: 'ex5_q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'ex5_q1', label: 'q1', isStart: false, isFinal: true },
+        { id: 'ex5_q2', label: 'q2', isStart: false, isFinal: true },
+        { id: 'ex5_q3', label: 'q3', isStart: false, isFinal: false },
+        { id: 'ex5_q4', label: 'q4', isStart: false, isFinal: false }, // dead state
+        { id: 'ex5_q5', label: 'q5', isStart: false, isFinal: false }, // dead state
+
+      ],
+      transitions: [
+        { id: 'ex5_t0', source: 'ex5_q0', target: 'ex5_q1', symbol: 'a' },
+        { id: 'ex5_t1', source: 'ex5_q0', target: 'ex5_q2', symbol: 'b' },
+        { id: 'ex5_t2', source: 'ex5_q0', target: 'ex5_q3', symbol: 'b' },
+        { id: 'ex5_t3', source: 'ex5_q1', target: 'ex5_q3', symbol: 'ε' },
+        { id: 'ex5_t4', source: 'ex5_q3', target: 'ex5_q2', symbol: 'a' },
+        { id: 'ex5_t5', source: 'ex5_q3', target: 'ex5_q3', symbol: 'b' },
+      ],
+      alphabet: ['a', 'b'],
+    },
+  },
 ]

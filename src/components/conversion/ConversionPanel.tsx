@@ -15,6 +15,7 @@ export function ConversionPanel() {
     stateToRemove,
     gtg,
     completeElimination,
+    backToStateSelection,
     resetConversion,
   } = useConversion()
 
@@ -30,9 +31,15 @@ export function ConversionPanel() {
         <h2 className="text-sm font-semibold text-gray-700">
           State Elimination
         </h2>
-        <Button size="sm" className="pr-8" variant="ghost" onClick={resetConversion}>
-          ← Back to Input
-        </Button>
+        {phase === 'selecting-state' || phase === 'preprocessing' || phase === 'finished' ? (
+          <Button size="sm" className="pr-8" variant="ghost" onClick={resetConversion}>
+            ← Back to Input
+          </Button>
+        ) : (
+          <Button size="sm" className="pr-8" variant="ghost" onClick={backToStateSelection}>
+            ← Back
+          </Button>
+        )}
       </div>
 
       {/* Step explanation */}
@@ -59,6 +66,48 @@ export function ConversionPanel() {
               Path {currentPathIndex + 1} of {currentPathUpdates.length}
             </p>
           </div>
+
+          {/* Path list showing all paths to be created */}
+          <div className="rounded border border-gray-200 bg-gray-50 p-2">
+            <p className="text-xs font-medium text-gray-600 mb-2">New paths to create:</p>
+            <div className="flex flex-col gap-1">
+              {currentPathUpdates.map((path, idx) => {
+                const fromLabel = gtg?.states.find((s) => s.id === path.from)?.label ?? path.from
+                const toLabel = gtg?.states.find((s) => s.id === path.to)?.label ?? path.to
+                const isCompleted = idx < currentPathIndex
+                const isCurrent = idx === currentPathIndex
+                const isPending = idx > currentPathIndex
+
+                return (
+                  <div
+                    key={`${path.from}-${path.to}`}
+                    className={`flex items-center gap-2 px-2 py-1 rounded text-xs font-mono transition-colors ${
+                      isCurrent
+                        ? 'bg-orange-100 border border-orange-300 text-orange-800'
+                        : isCompleted
+                        ? 'bg-green-50 text-green-700'
+                        : 'text-gray-500'
+                    }`}
+                  >
+                    <span className="w-4 text-center">
+                      {isCompleted && <span className="text-green-600">✓</span>}
+                      {isCurrent && <span className="text-orange-600">○</span>}
+                      {isPending && <span className="text-gray-400">○</span>}
+                    </span>
+                    <span className={isCompleted ? 'line-through' : ''}>
+                      {fromLabel} → {toLabel}
+                    </span>
+                    {isCompleted && path.expectedResult && (
+                      <span className="text-green-600 ml-auto truncate max-w-[100px]" title={path.expectedResult}>
+                        = {path.expectedResult}
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
           {currentPathUpdates[currentPathIndex] && (
             <PathUpdateForm
               pathUpdate={currentPathUpdates[currentPathIndex]}
@@ -86,6 +135,34 @@ export function ConversionPanel() {
               )}
             </p>
           </div>
+
+          {/* Summary of new paths created */}
+          {currentPathUpdates.length > 0 && (
+            <div className="rounded border border-gray-200 bg-gray-50 p-2">
+              <p className="text-xs font-medium text-gray-600 mb-2">New paths created:</p>
+              <div className="flex flex-col gap-1">
+                {currentPathUpdates.map((path) => {
+                  const fromLabel = gtg?.states.find((s) => s.id === path.from)?.label ?? path.from
+                  const toLabel = gtg?.states.find((s) => s.id === path.to)?.label ?? path.to
+                  return (
+                    <div
+                      key={`${path.from}-${path.to}`}
+                      className="flex items-center gap-2 px-2 py-1 rounded text-xs font-mono bg-green-50 text-green-700"
+                    >
+                      <span className="w-4 text-center text-green-600">✓</span>
+                      <span>{fromLabel} → {toLabel}</span>
+                      {path.expectedResult && (
+                        <span className="text-green-600 ml-auto truncate max-w-[120px]" title={path.expectedResult}>
+                          = {path.expectedResult}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           <Button onClick={completeElimination}>
             Complete Elimination & Continue
           </Button>
@@ -106,7 +183,7 @@ export function ConversionPanel() {
         </div>
       )}
 
-      <PlaybackControls />
+      {/* <PlaybackControls /> */}
     </div>
   )
 }
