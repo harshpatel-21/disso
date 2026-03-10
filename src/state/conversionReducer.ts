@@ -29,7 +29,6 @@ export type ConversionAction =
   | { type: 'ADVANCE_PATH' }
   | { type: 'COMPLETE_ELIMINATION'; payload: { gtg: GTG; step: EliminationStep } }
   | { type: 'EXTRACT_RESULT'; payload: { regex: string; step: EliminationStep } }
-  | { type: 'GO_TO_STEP'; payload: number }
   | { type: 'AUTO_COMPLETE_PATH'; payload: number }
   | { type: 'SET_HIGHLIGHTED_R'; payload: 'R1' | 'R2' | 'R3' | 'R4' | null }
   | { type: 'BACK_TO_STATE_SELECTION' }
@@ -145,15 +144,6 @@ export function conversionReducer(
         currentStepIndex: state.history.length,
       }
 
-    case 'GO_TO_STEP': {
-      const step = state.history[action.payload]
-      if (!step) return state
-      return {
-        ...state,
-        currentStepIndex: action.payload,
-      }
-    }
-
     case 'SET_HIGHLIGHTED_R':
       return { ...state, highlightedR: action.payload }
 
@@ -172,6 +162,14 @@ export function conversionReducer(
       const step = state.history[lastEliminateIdx]
       if (!step) return state
       const newHistory = state.history.slice(0, lastEliminateIdx)
+      const stateLabel = step.stateToRemove ? (step.gtgBefore?.states.find(s => s.id === step.stateToRemove)?.label ?? step.stateToRemove) : 'unknown'
+      newHistory.push({
+        type: 'revert',
+        gtgBefore: step.gtgAfter,
+        gtgAfter: step.gtgBefore,
+        explanation: `Reverted elimination of state ${stateLabel}.`,
+        affectedPaths: step.affectedPaths,
+      })
       return {
         ...state,
         phase: 'selecting-state',

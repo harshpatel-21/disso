@@ -1,7 +1,6 @@
 import { useConversion } from '../../hooks/useConversion'
 import { StateSelector } from './StateSelector'
 import { PathUpdateForm } from './PathUpdateForm'
-import { PlaybackControls } from '../common/PlaybackControls'
 import { Button } from '../common/Button'
 
 export function ConversionPanel() {

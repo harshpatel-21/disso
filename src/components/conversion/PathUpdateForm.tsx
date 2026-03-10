@@ -73,7 +73,7 @@ export function PathUpdateForm({
       {/* User input */}
       <div className="flex flex-col gap-2">
         <label className="text-xs font-medium text-gray-600">
-          Enter the resulting expression:
+          Enter the resulting expression (do not include the grey brackets shown in formula):
         </label>
         <div className="flex gap-2">
           <input

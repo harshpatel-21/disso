@@ -40,7 +40,7 @@ export interface PathUpdate {
 }
 
 export interface EliminationStep {
-  type: 'preprocess' | 'eliminate' | 'extract'
+  type: 'preprocess' | 'eliminate' | 'extract' | 'revert'
   stateToRemove?: StateId
   affectedPaths: PathUpdate[]
   explanation: string

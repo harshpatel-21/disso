@@ -122,13 +122,6 @@ export function useConversion() {
     }
   }, [conversionState, conversionDispatch])
 
-  const goToStep = useCallback(
-    (index: number) => {
-      conversionDispatch({ type: 'GO_TO_STEP', payload: index })
-    },
-    [conversionDispatch]
-  )
-
   const setHighlightedR = useCallback(
     (r: 'R1' | 'R2' | 'R3' | 'R4' | null) => {
       conversionDispatch({ type: 'SET_HIGHLIGHTED_R', payload: r })
@@ -162,7 +155,6 @@ export function useConversion() {
     autoCompletePath,
     advancePath,
     completeElimination,
-    goToStep,
     setHighlightedR,
     revertElimination,
     backToStateSelection,
