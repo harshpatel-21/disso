@@ -15,9 +15,12 @@ export function ConversionPanel() {
     stateToRemove,
     gtg,
     completeElimination,
+    revertElimination,
     backToStateSelection,
     resetConversion,
   } = useConversion()
+
+  const canRevert = history.some(s => s.type === 'eliminate')
 
   const currentStep = history[currentStepIndex]
   const removedStateLabel =
@@ -54,7 +57,16 @@ export function ConversionPanel() {
         <p className="text-sm text-gray-500">Preprocessing...</p>
       )}
 
-      {phase === 'selecting-state' && <StateSelector />}
+      {phase === 'selecting-state' && (
+        <>
+          <StateSelector />
+          {canRevert && (
+            <Button variant="secondary" onClick={revertElimination}>
+              Revert Last Elimination
+            </Button>
+          )}
+        </>
+      )}
 
       {phase === 'updating-paths' && (
         <div className="flex flex-col gap-3">

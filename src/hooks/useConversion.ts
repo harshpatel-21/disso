@@ -136,6 +136,10 @@ export function useConversion() {
     [conversionDispatch]
   )
 
+  const revertElimination = useCallback(() => {
+    conversionDispatch({ type: 'REVERT_LAST_ELIMINATION' })
+  }, [conversionDispatch])
+
   const backToStateSelection = useCallback(() => {
     conversionDispatch({ type: 'BACK_TO_STATE_SELECTION' })
   }, [conversionDispatch])
@@ -160,6 +164,7 @@ export function useConversion() {
     completeElimination,
     goToStep,
     setHighlightedR,
+    revertElimination,
     backToStateSelection,
     resetConversion,
   }

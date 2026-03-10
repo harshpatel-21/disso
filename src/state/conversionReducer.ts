@@ -33,6 +33,7 @@ export type ConversionAction =
   | { type: 'AUTO_COMPLETE_PATH'; payload: number }
   | { type: 'SET_HIGHLIGHTED_R'; payload: 'R1' | 'R2' | 'R3' | 'R4' | null }
   | { type: 'BACK_TO_STATE_SELECTION' }
+  | { type: 'REVERT_LAST_ELIMINATION' }
   | { type: 'RESET_CONVERSION' }
 
 export const initialConversionState: ConversionState = {
@@ -164,6 +165,25 @@ export function conversionReducer(
         currentPathUpdates: [],
         currentPathIndex: 0,
       }
+
+    case 'REVERT_LAST_ELIMINATION': {
+      const lastEliminateIdx = state.history.map(s => s.type).lastIndexOf('eliminate')
+      if (lastEliminateIdx === -1) return state
+      const step = state.history[lastEliminateIdx]
+      if (!step) return state
+      const newHistory = state.history.slice(0, lastEliminateIdx)
+      return {
+        ...state,
+        phase: 'selecting-state',
+        gtg: step.gtgBefore,
+        history: newHistory,
+        currentStepIndex: newHistory.length - 1,
+        stateToRemove: null,
+        currentPathUpdates: [],
+        currentPathIndex: 0,
+        finalRegex: null,
+      }
+    }
 
     case 'RESET_CONVERSION':
       return { ...initialConversionState }
