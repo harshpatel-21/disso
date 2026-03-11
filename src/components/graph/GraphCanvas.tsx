@@ -38,13 +38,17 @@ function GraphCanvasInner() {
       ? conversionState.currentPathUpdates[conversionState.currentPathIndex] ?? null
       : null
 
-  const highlight = isConverting
-    ? {
-        stateToRemove: conversionState.stateToRemove,
-        currentPath,
-        highlightedR: conversionState.highlightedR,
-      }
-    : undefined
+  const highlight = useMemo(
+    () =>
+      isConverting
+        ? {
+            stateToRemove: conversionState.stateToRemove,
+            currentPath,
+            highlightedR: conversionState.highlightedR,
+          }
+        : undefined,
+    [isConverting, conversionState.stateToRemove, currentPath, conversionState.highlightedR]
+  )
 
   const { nodes: layoutedNodes, edges } = useGraphLayout(graphData, { highlight })
 
