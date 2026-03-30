@@ -17,6 +17,7 @@ import { useGraphLayout } from '../../hooks/useGraphLayout'
 import { StateNode } from './StateNode'
 import { TransitionEdge } from './TransitionEdge'
 import { GraphToolbar } from './GraphToolbar'
+import { EdgeBendContext } from './EdgeBendContext'
 
 function GraphCanvasInner() {
   const { nfa, nfaToRegexPhase, appMode } = useNFA()
@@ -55,6 +56,17 @@ function GraphCanvasInner() {
   // Track manually dragged positions so they survive re-renders
   const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>({})
   const [displayNodes, setDisplayNodes] = useState<Node[]>(layoutedNodes)
+
+  // Track edge bend offsets so they survive re-renders
+  const [edgeBends, setEdgeBends] = useState<Record<string, { x: number; y: number }>>({})
+  const setEdgeBend = useCallback((id: string, x: number, y: number) => {
+    setEdgeBends((prev) => ({ ...prev, [id]: { x, y } }))
+  }, [])
+
+  const displayEdges = useMemo(
+    () => edges.map((e) => ({ ...e, data: { ...e.data, bend: edgeBends[e.id] } })),
+    [edges, edgeBends]
+  )
 
   // When layout changes (graph structure or highlight update), merge in saved positions
   useEffect(() => {
@@ -123,10 +135,11 @@ function GraphCanvasInner() {
   )
 
   return (
+    <EdgeBendContext.Provider value={{ bends: edgeBends, setEdgeBend }}>
     <div className="w-full h-full relative">
       <ReactFlow
         nodes={displayNodes}
-        edges={edges}
+        edges={displayEdges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onConnect={onConnect}
@@ -197,6 +210,7 @@ function GraphCanvasInner() {
         </div>
       )}
     </div>
+    </EdgeBendContext.Provider>
   )
 }
 
