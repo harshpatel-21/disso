@@ -1,6 +1,7 @@
-import { memo } from 'react'
+import { memo, useRef } from 'react'
 import {
   EdgeLabelRenderer,
+  getBezierPath,
   useReactFlow,
   type EdgeProps,
 } from '@xyflow/react'
@@ -23,6 +24,8 @@ function TransitionEdgeComponent({
   sourceY,
   targetX,
   targetY,
+  sourcePosition,
+  targetPosition,
   data,
   source,
   target,
@@ -36,6 +39,10 @@ function TransitionEdgeComponent({
   const { bends, setEdgeBend } = useEdgeBendContext()
   const { getViewport } = useReactFlow()
   const bend = bends[id] ?? { x: 0, y: 0 }
+  const isBent = bend.x !== 0 || bend.y !== 0
+
+  // Persists handle position across renders during a drag
+  const dragRef = useRef<{ hx: number; hy: number } | null>(null)
 
   const stroke = isBeingRemoved ? '#ef4444' : isHighlighted ? highlightColor : '#94a3b8'
   const strokeWidth = isHighlighted ? 2.5 : 1.5
@@ -92,30 +99,47 @@ function TransitionEdgeComponent({
     )
   }
 
-  // Quadratic bezier: control point is offset so the curve passes through
-  // (naturalMid + bend) at t=0.5. Formula: ctrl = naturalMid + 2*bend
+  // Default bezier path — used when unbent, and as origin for first drag
+  const [defaultPath, defaultLabelX, defaultLabelY] = getBezierPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+  })
+
   const naturalMidX = (sourceX + targetX) / 2
   const naturalMidY = (sourceY + targetY) / 2
-  const ctrlX = naturalMidX + 2 * bend.x
-  const ctrlY = naturalMidY + 2 * bend.y
-  const handleX = naturalMidX + bend.x
-  const handleY = naturalMidY + bend.y
 
-  const edgePath = `M ${sourceX} ${sourceY} Q ${ctrlX} ${ctrlY} ${targetX} ${targetY}`
+  // When bent: quadratic bezier with control point shifted so curve passes
+  // through (naturalMid + bend) at t=0.5 → ctrl = naturalMid + 2*bend
+  const edgePath = isBent
+    ? `M ${sourceX} ${sourceY} Q ${naturalMidX + 2 * bend.x} ${naturalMidY + 2 * bend.y} ${targetX} ${targetY}`
+    : defaultPath
+
+  // Handle sits at the visual midpoint of the curve
+  const handleX = isBent ? naturalMidX + bend.x : defaultLabelX
+  const handleY = isBent ? naturalMidY + bend.y : defaultLabelY
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     e.stopPropagation()
     e.currentTarget.setPointerCapture(e.pointerId)
+    // Start drag from the current visual midpoint (bezier or bent)
+    dragRef.current = { hx: handleX, hy: handleY }
   }
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!(e.buttons & 1)) return
+    if (!(e.buttons & 1) || !dragRef.current) return
     const { zoom } = getViewport()
-    setEdgeBend(id, bend.x + e.movementX / zoom, bend.y + e.movementY / zoom)
+    dragRef.current.hx += e.movementX / zoom
+    dragRef.current.hy += e.movementY / zoom
+    setEdgeBend(id, dragRef.current.hx - naturalMidX, dragRef.current.hy - naturalMidY)
   }
 
   const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     e.currentTarget.releasePointerCapture(e.pointerId)
+    dragRef.current = null
   }
 
   return (
@@ -130,12 +154,16 @@ function TransitionEdgeComponent({
         markerEnd="url(#arrowhead)"
       />
       <EdgeLabelRenderer>
-        {/* Label */}
         <div
-          className="absolute pointer-events-none nodrag nopan"
+          className="absolute nodrag nopan"
           style={{
             transform: `translate(-50%, -50%) translate(${handleX}px, ${handleY}px)`,
+            cursor: 'grab',
+            pointerEvents: 'all',
           }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
         >
           <span
             className={`rounded px-1.5 py-0.5 text-xs font-mono ${
@@ -146,27 +174,6 @@ function TransitionEdgeComponent({
             {symbol}
           </span>
         </div>
-        {/* Drag handle */}
-        <div
-          className="absolute nodrag nopan"
-          style={{
-            transform: `translate(-50%, -50%) translate(${handleX}px, ${handleY}px)`,
-            width: 18,
-            height: 18,
-            borderRadius: '0%',
-            background: 'white',
-            border: '0px solid #94a3b8',
-            opacity: 0.4,
-            cursor: 'grab',
-            pointerEvents: 'all',
-            zIndex: 10,
-          }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '.1' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.opacity = '0.1' }}
-        />
       </EdgeLabelRenderer>
     </>
   )

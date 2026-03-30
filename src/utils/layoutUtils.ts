@@ -27,10 +27,35 @@ export function getLayoutedElements(
     g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT })
   }
 
-  for (const edge of edges) {
-    // Skip self-loops for dagre layout (they don't affect positioning)
-    if (edge.source !== edge.target) {
-      g.setEdge(edge.source, edge.target)
+  // Use a BFS spanning tree from the start node rather than all edges.
+  // Feeding every edge to dagre causes cycle-breaking that collapses
+  // bidirectional graphs into a single linear rank. With BFS, nodes
+  // reachable in one hop from the start share a rank and spread vertically.
+  const startNodeId =
+    nodes.find((n) => n.data?.['isStart'] === true)?.id ?? nodes[0]?.id
+
+  if (startNodeId) {
+    const visited = new Set([startNodeId])
+    const queue = [startNodeId]
+    while (queue.length > 0) {
+      const current = queue.shift()!
+      for (const edge of edges) {
+        if (
+          edge.source === current &&
+          edge.source !== edge.target &&
+          !visited.has(edge.target)
+        ) {
+          visited.add(edge.target)
+          queue.push(edge.target)
+          g.setEdge(edge.source, edge.target)
+        }
+      }
+    }
+  } else {
+    for (const edge of edges) {
+      if (edge.source !== edge.target) {
+        g.setEdge(edge.source, edge.target)
+      }
     }
   }
 
