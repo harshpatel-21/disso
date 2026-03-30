@@ -1,6 +1,8 @@
 import { useState, useCallback, createContext, useContext, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
+// This file was written by AI
+
 interface Notification {
   id: string
   message: string
