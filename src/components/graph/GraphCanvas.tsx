@@ -139,6 +139,11 @@ function GraphCanvasInner() {
     if (pendingConnection && symbolInput.trim()) {
       const source = pendingConnection.source
       const target = pendingConnection.target
+      // check if the symbol exists in the alphabet, if not add it
+      if (nfa && !nfa.alphabet.includes(symbolInput.trim())) {
+        nfa.alphabet.push(symbolInput.trim())
+      }
+
       if (source && target) {
         addTransition(source, target, symbolInput.trim())
       }

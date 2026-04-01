@@ -89,7 +89,6 @@ function needsParensForConcat(expr: string): boolean {
 }
 
 function needsParensForStar(expr: string): boolean {
-  // Single char doesn't need parens
   if (expr.length <= 1) return false
   // Already parenthesized
   if (expr.startsWith('(') && findMatchingParen(expr, 0) === expr.length - 1) {
@@ -109,6 +108,7 @@ function hasTopLevelUnion(expr: string): boolean {
   return false
 }
 
+// Find the index of the matching closing parenthesis based on the index
 function findMatchingParen(expr: string, openIndex: number): number {
   let depth = 0
   for (let i = openIndex; i < expr.length; i++) {

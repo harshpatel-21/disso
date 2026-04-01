@@ -31,6 +31,15 @@ interface ParserState {
   pos: number
 }
 
+/**
+ * Order of precedence goes:
+ * 1. symbols and ε (handled in parseAtom)
+ * 2. Kleene-Star (handled in parseFactor)
+ * 3. Concatenation (handled in parseTerm)
+ * 4. Union (handled in parseExpr)
+ *
+ * Each function parses components of its precedence level and calls higher precedence functions as needed.
+ */
 function parseExpr(p: ParserState): ASTNode {
   const start = p.pos
   let node = parseTerm(p)
@@ -46,6 +55,8 @@ function parseExpr(p: ParserState): ASTNode {
 
 function parseTerm(p: ParserState): ASTNode {
   let node = parseFactor(p)
+  
+  // Keep finding concatenated factors
   while (
     p.pos < p.input.length &&
     p.input[p.pos] !== ')' &&
@@ -61,6 +72,7 @@ function parseTerm(p: ParserState): ASTNode {
 function parseFactor(p: ParserState): ASTNode {
   const start = p.pos
   let node = parseAtom(p)
+  // Keep checking for Kleene stars following the atom/nested expression
   while (p.pos < p.input.length && p.input[p.pos] === '*') {
     p.pos++
     node = { type: 'star', operand: node, start, end: p.pos - 1 }
@@ -105,7 +117,17 @@ interface Fragment {
   finalId: string
 }
 
-/** Returns a copy of the NFA with only the fragment's start/final states marked. */
+function makeState(id: string, label: string): State {
+  return { id, label, isStart: false, isFinal: false }
+}
+
+/** 
+ * Returns a copy of the NFA with only the fragment's start/final states marked. 
+ * 
+ * This is only used by the graph renderer. It needs to know which states to
+ * draw as start/final at each step. It doesn't affect the construction logic
+ * at all
+ * */
 function markFragment(nfa: NFA, startId: string, finalId: string): NFA {
   return {
     ...nfa,
@@ -117,9 +139,6 @@ function markFragment(nfa: NFA, startId: string, finalId: string): NFA {
   }
 }
 
-function makeState(id: string, label: string): State {
-  return { id, label, isStart: false, isFinal: false }
-}
 
 interface BuildResult {
   fragment: Fragment
@@ -389,3 +408,46 @@ function collectAlphabet(node: ASTNode): string[] {
       return collectAlphabet(node.operand)
   }
 }
+
+
+// test function to visualize the AST (not exported)
+export function printAST(node: ASTNode, indent = 0): void {
+  const padding = ' '.repeat(indent)
+  switch (node.type) {
+    case 'symbol':
+      console.log(`${padding}Symbol('${node.char}') [${node.start}, ${node.end}]`)
+      break
+    case 'epsilon':
+      console.log(`${padding}Epsilon [${node.start}, ${node.end}]`)
+      break
+    case 'union':
+      console.log(`${padding}Union [${node.start}, ${node.end}]`)
+      printAST(node.left, indent + 2)
+      printAST(node.right, indent + 2)
+      break
+    case 'concat':
+      console.log(`${padding}Concat [${node.start}, ${node.end}]`)
+      printAST(node.left, indent + 2)
+      printAST(node.right, indent + 2)
+      break
+    case 'star':
+      console.log(`${padding}Star [${node.start}, ${node.end}]`)
+      printAST(node.operand, indent + 2)
+      break
+  }
+}
+
+// test function that stores a regex and prints the AST (not exported)
+export function testParse(regex: string): void {
+  const result = buildThompsonSteps(regex)
+  if (result.error) {
+    console.error(`Error parsing regex: ${result.error}`)
+  } else {
+    console.log(`Successfully parsed regex: '${regex}'`)
+    console.log('Generated steps:')
+    result.steps.forEach((step, index) => {
+      console.log(`Step ${index + 1}: ${step.explanation}`)
+    })
+  }
+}
+

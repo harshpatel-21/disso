@@ -13,8 +13,8 @@ import { eliminationFormula, union } from './regexUtils'
 
 /**
  * Preprocess: add new unique start state S and final state F.
- * - S has ε-transition to original start
- * - All original final states get ε-transition to F
+ * - S has epsilon-transition to original start
+ * - All original final states get epsilon-transition to F
  * - Original start loses isStart, original finals lose isFinal
  */
 export function preprocess(gtg: GTG): { gtg: GTG; step: EliminationStep } {
@@ -217,7 +217,7 @@ export function extractFinalRegex(gtg: GTG): string {
 }
 
 /**
- * Get the list of eliminable states (all except new start S and new final F).
+ * Get the list of states that can be eliminated (all except new start S and new final F).
  */
 export function getEliminableStates(gtg: GTG): State[] {
   return gtg.states.filter((s) => !s.isStart && !s.isFinal)

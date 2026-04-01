@@ -1,5 +1,4 @@
 import type { NFA, GTG, State, Transition, StateId, TransitionId } from './types'
-import { EPSILON } from './types'
 import { union } from './regexUtils'
 
 let stateCounter = 0
@@ -152,9 +151,6 @@ export function cloneNFA<T extends NFA>(nfa: T): T {
   }
 }
 
-/**
- * Create an empty NFA.
- */
 export function createEmptyNFA(): NFA {
   return {
     states: [],
