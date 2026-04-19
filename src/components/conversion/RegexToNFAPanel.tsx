@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useThompson } from '../../hooks/useThompson'
 import type { ThompsonTemplate } from '../../core/types'
 import { Button } from '../common/Button'
+import { regexExamples } from '../../data/regexExamples'
 
 // ---- Regex span highlighter ----
 
@@ -79,6 +80,7 @@ export function RegexToNFAPanel() {
   } = useThompson()
 
   const [localRegex, setLocalRegex] = useState('')
+  const [showExamples, setShowExamples] = useState(false)
 
   const handleStart = () => {
     if (localRegex.trim()) startConstruction(localRegex.trim())
@@ -93,7 +95,34 @@ export function RegexToNFAPanel() {
   if (phase === 'idle') {
     return (
       <div className="flex flex-col gap-4 p-4">
-        <h2 className="text-sm font-semibold text-gray-700">Thompson's Construction</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-gray-700">Thompson's Construction</h2>
+          <Button size="sm" variant="ghost" onClick={() => setShowExamples(!showExamples)}>
+            {showExamples ? 'Hide' : 'Load'} Examples
+          </Button>
+        </div>
+
+        {showExamples && (
+          <div className="flex flex-col gap-1 rounded border border-gray-200 bg-gray-50 p-2">
+            {regexExamples.map((ex) => (
+              <button
+                key={ex.name}
+                onClick={() => {
+                  setLocalRegex(ex.regex)
+                  setShowExamples(false)
+                }}
+                className="flex flex-col rounded px-2 py-1.5 text-left hover:bg-white transition-colors cursor-pointer"
+              >
+                <span className="text-xs font-medium text-gray-700">
+                  {ex.name}{' '}
+                  <span className="font-mono text-amber-700">{ex.regex}</span>
+                </span>
+                <span className="text-[10px] text-gray-500">{ex.description}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
         <p className="text-xs text-gray-500">
           Convert a regular expression to an NFA step by step using Thompson's Construction.
           At each step, identify which template applies.
