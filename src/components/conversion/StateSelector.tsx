@@ -2,7 +2,7 @@ import { useConversion } from '../../hooks/useConversion'
 import { Button } from '../common/Button'
 
 export function StateSelector() {
-  const { eliminableStates, selectStateToRemove } = useConversion()
+  const { eliminableStates, gtg, selectStateToRemove } = useConversion()
 
   if (eliminableStates.length === 0) {
     return (
@@ -11,11 +11,15 @@ export function StateSelector() {
   }
 
   const handleAutoPick = () => {
-    // Pick state with fewest total connections (simplest elimination)
-    const first = eliminableStates[0]
-    if (first) {
-      selectStateToRemove(first.id)
-    }
+    // Pick state with fewest total transitions touching it (in + out, self-loop counted once)
+    const best = eliminableStates.reduce((prev, curr) => {
+      const count = (s: typeof curr) =>
+        (gtg?.transitions ?? []).filter(
+          (t) => t.source === s.id || t.target === s.id
+        ).length
+      return count(curr) < count(prev) ? curr : prev
+    })
+    selectStateToRemove(best.id)
   }
 
   return (
