@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ReactFlow,
   Background,
@@ -10,6 +10,7 @@ import {
   type Node,
   type NodeChange,
   applyNodeChanges,
+  useReactFlow,
 } from '@xyflow/react'
 import { useNFA } from '../../hooks/useNFA'
 import { useAppContext } from '../../state/AppContext'
@@ -26,8 +27,18 @@ function GraphCanvasInner() {
   const { conversionState, thompsonState } = useAppContext()
   const { addTransition } = useNFA()
 
+  const { fitView } = useReactFlow()
   const isThompson = appMode === 'regex-to-nfa'
   const isConverting = appMode === 'nfa-to-regex' && nfaToRegexPhase === 'converting'
+
+  // Fit view when the user selects the correct Thompson template
+  const prevTemplateCorrect = useRef(thompsonState.isTemplateCorrect)
+  useEffect(() => {
+    if (thompsonState.isTemplateCorrect === true && prevTemplateCorrect.current !== true) {
+      requestAnimationFrame(() => fitView({ padding: 0.3, duration: 300 }))
+    }
+    prevTemplateCorrect.current = thompsonState.isTemplateCorrect
+  }, [thompsonState.isTemplateCorrect, fitView])
 
   // Thompson: determine which NFA snapshot to show
   const thompsonDisplayNFA = useMemo(() => {

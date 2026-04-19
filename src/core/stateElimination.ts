@@ -112,6 +112,8 @@ export function computePathUpdates(
   const R2 =
     selfLoops.length === 0
       ? EMPTY_SET
+      // : selfLoops.length === 1
+      // ? selfLoops[0]?.symbol ?? EMPTY_SET
       : selfLoops.map((t) => t.symbol).reduce((a, b) => union(a, b))
 
   const pathUpdates: PathUpdate[] = []
