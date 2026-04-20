@@ -1,3 +1,8 @@
+/**
+ * AI assistance was used for graph-specific React Flow command wiring
+ * (fit view, connect handlers, and edge/node interaction flow) and for
+ * visual styling behavior like highlighted paths and edge emphasis.
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ReactFlow,
@@ -19,8 +24,6 @@ import { StateNode } from './StateNode'
 import { TransitionEdge } from './TransitionEdge'
 import { GraphToolbar } from './GraphToolbar'
 import { EdgeBendContext } from './EdgeBendContext'
-
-// THis file was mostly written by AI.
 
 function GraphCanvasInner() {
   const { nfa, nfaToRegexPhase, appMode } = useNFA()

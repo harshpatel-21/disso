@@ -1,3 +1,8 @@
+/**
+ * AI assistance was used for graph-specific edge rendering work here,
+ * especially framework-driven edge interactions and styling such as
+ * highlighted transitions, removal state, and bend-handle behavior.
+ */
 import { memo, useRef } from 'react'
 import {
   EdgeLabelRenderer,
@@ -17,8 +22,6 @@ export interface TransitionEdgeData {
 }
 
 type TransitionEdgeProps = EdgeProps & { data?: TransitionEdgeData }
-
-// This component was mostly written by AI, with some manual adjustments to the edge bending logic and styling.
 
 function TransitionEdgeComponent({
   id,

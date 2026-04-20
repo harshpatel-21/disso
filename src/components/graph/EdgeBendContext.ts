@@ -1,3 +1,7 @@
+/**
+ * AI assistance was used for graph-specific framework wiring here,
+ * mainly for edge-bend state handling that supports visual edge styling.
+ */
 import { createContext, useContext } from 'react'
 
 interface EdgeBendContextValue {

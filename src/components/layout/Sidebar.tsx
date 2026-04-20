@@ -1,3 +1,7 @@
+/**
+ * AI assistance was used mainly for styling in this component
+ * (visual presentation, class tuning, and UI polish).
+ */
 import { useRef, useState, useCallback } from 'react'
 import { useNFA } from '../../hooks/useNFA'
 import { NFAInputPanel } from '../nfa-input/NFAInputPanel'

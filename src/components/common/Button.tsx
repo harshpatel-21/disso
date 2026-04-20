@@ -1,3 +1,7 @@
+/**
+ * AI assistance was used mainly for styling in this component
+ * (visual presentation, class tuning, and UI polish).
+ */
 import type { ButtonHTMLAttributes } from 'react'
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost'

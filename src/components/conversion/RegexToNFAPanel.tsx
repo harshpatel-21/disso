@@ -1,3 +1,7 @@
+/**
+ * AI assistance was used mainly for styling in this component
+ * (visual presentation, class tuning, and UI polish).
+ */
 import { useState } from 'react'
 import { useThompson } from '../../hooks/useThompson'
 import type { ThompsonTemplate } from '../../core/types'

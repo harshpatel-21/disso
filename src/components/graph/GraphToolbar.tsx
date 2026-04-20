@@ -1,3 +1,7 @@
+/**
+ * AI assistance was used for graph framework command integration in this file,
+ * primarily wiring toolbar actions like fit-view behavior.
+ */
 import { useReactFlow } from '@xyflow/react'
 import { Button } from '../common/Button'
 

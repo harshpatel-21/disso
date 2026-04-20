@@ -1,3 +1,7 @@
+/**
+ * AI assistance was used for graph-specific visual styling in this file,
+ * including state highlighting and display treatment for graph interactions.
+ */
 import { memo } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 
