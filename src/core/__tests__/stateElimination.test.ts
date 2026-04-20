@@ -94,6 +94,18 @@ function fullyEliminate(gtg: GTG): string {
 
 // ---- preprocess ----
 
+describe('preprocess — no original start state (explanation fallback branch)', () => {
+  it('explanation falls back to "?" when the original GTG has no start state', () => {
+    const noStartGTG: GTG = {
+      states: [{ id: 'q0', label: 'q0', isStart: false, isFinal: true }],
+      transitions: [],
+      alphabet: [],
+    }
+    const { step } = preprocess(noStartGTG)
+    expect(step.explanation).toContain('?')
+  })
+})
+
 describe('preprocess', () => {
   it('adds a new start state S and final state F', () => {
     const { gtg } = preprocess(makeEasyGTG())
@@ -255,5 +267,134 @@ describe('full state elimination pipeline', () => {
 
   it('very hard — NFA accepting "a*b+" produces regex "a*bb*"', () => {
     expect(fullyEliminate(makeVeryHardGTG())).toBe('a*bb*')
+  })
+})
+
+// ---- extractFinalRegex edge cases (covers lines 214-215) ----
+
+describe('extractFinalRegex — missing start or final state', () => {
+  it('returns ∅ when GTG has no start state at all', () => {
+    const gtg: GTG = {
+      states: [{ id: 'F', label: 'F', isStart: false, isFinal: true }],
+      transitions: [],
+      alphabet: [],
+    }
+    expect(extractFinalRegex(gtg)).toBe(EMPTY_SET)
+  })
+
+  it('returns ∅ when GTG has no final state at all', () => {
+    const gtg: GTG = {
+      states: [{ id: 'S', label: 'S', isStart: true, isFinal: false }],
+      transitions: [],
+      alphabet: [],
+    }
+    expect(extractFinalRegex(gtg)).toBe(EMPTY_SET)
+  })
+
+  it('returns ∅ when GTG is completely empty', () => {
+    expect(extractFinalRegex({ states: [], transitions: [], alphabet: [] })).toBe(EMPTY_SET)
+  })
+})
+
+// ---- Complex end-to-end pipelines ----
+
+describe('complex elimination pipelines', () => {
+  it('4-state linear NFA: q0→q1(a)→q2(b)→q3(c) produces "abc"', () => {
+    const linearGTG: GTG = {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
+        { id: 'q2', label: 'q2', isStart: false, isFinal: false },
+        { id: 'q3', label: 'q3', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
+        { id: 't1', source: 'q1', target: 'q2', symbol: 'b' },
+        { id: 't2', source: 'q2', target: 'q3', symbol: 'c' },
+      ],
+      alphabet: ['a', 'b', 'c'],
+    }
+    expect(fullyEliminate(linearGTG)).toBe('abc')
+  })
+
+  it('diamond NFA: q0→q1(a), q0→q2(b), q1→q3(c), q2→q3(d) produces "ac+bd"', () => {
+    const diamondGTG: GTG = {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
+        { id: 'q2', label: 'q2', isStart: false, isFinal: false },
+        { id: 'q3', label: 'q3', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
+        { id: 't1', source: 'q0', target: 'q2', symbol: 'b' },
+        { id: 't2', source: 'q1', target: 'q3', symbol: 'c' },
+        { id: 't3', source: 'q2', target: 'q3', symbol: 'd' },
+      ],
+      alphabet: ['a', 'b', 'c', 'd'],
+    }
+    expect(fullyEliminate(diamondGTG)).toBe('ac+bd')
+  })
+
+  it('NFA with two self-loops on intermediate state: q0-a->q1(-b,-c self-loops)-d->q2 produces "a(b+c)*d"', () => {
+    const selfLoopGTG: GTG = {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
+        { id: 'q2', label: 'q2', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
+        { id: 't1', source: 'q1', target: 'q1', symbol: 'b' },
+        { id: 't2', source: 'q1', target: 'q1', symbol: 'c' },
+        { id: 't3', source: 'q1', target: 'q2', symbol: 'd' },
+      ],
+      alphabet: ['a', 'b', 'c', 'd'],
+    }
+    expect(fullyEliminate(selfLoopGTG)).toBe('a(b+c)*d')
+  })
+})
+
+// ---- computePathUpdates — complex cases ----
+
+describe('computePathUpdates — multiple predecessors/successors', () => {
+  it('2 predecessors × 2 successors produces 4 path updates', () => {
+    const multiGTG: GTG = {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
+        { id: 'q2', label: 'q2', isStart: false, isFinal: false },
+        { id: 'q3', label: 'q3', isStart: false, isFinal: false },
+        { id: 'q4', label: 'q4', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q2', symbol: 'a' },
+        { id: 't1', source: 'q1', target: 'q2', symbol: 'b' },
+        { id: 't2', source: 'q2', target: 'q3', symbol: 'c' },
+        { id: 't3', source: 'q2', target: 'q4', symbol: 'd' },
+      ],
+      alphabet: ['a', 'b', 'c', 'd'],
+    }
+    expect(computePathUpdates(multiGTG, 'q2')).toHaveLength(4)
+  })
+
+  it('existing direct transition fills R4 and merges with new path via union', () => {
+    // q0 -a-> q1, q1 -b-> q2, q0 -z-> q2 (existing direct)
+    const r4GTG: GTG = {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
+        { id: 'q2', label: 'q2', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
+        { id: 't1', source: 'q1', target: 'q2', symbol: 'b' },
+        { id: 't2', source: 'q0', target: 'q2', symbol: 'z' },
+      ],
+      alphabet: ['a', 'b', 'z'],
+    }
+    const [update] = computePathUpdates(r4GTG, 'q1')
+    expect(update!.R4).toBe('z')
+    expect(update!.expectedResult).toBe('z+ab')
   })
 })

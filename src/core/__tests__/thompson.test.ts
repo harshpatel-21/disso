@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildThompsonSteps } from '../thompson'
+import { buildThompsonSteps, printAST, testParse } from '../thompson'
 import { EPSILON } from '../types'
 
 // buildThompsonSteps resets its own counters on each call.
@@ -19,6 +19,14 @@ describe('buildThompsonSteps — error handling', () => {
   it('returns an error for unmatched parenthesis', () => {
     const { error } = buildThompsonSteps('(ab')
     expect(error).toBeDefined()
+  })
+
+  it('returns an error when parsing succeeds but input has unconsumed trailing characters (e.g. "a)")', () => {
+    // parseExpr consumes 'a', then ')' remains unconsumed → triggers the trailing-char check
+    const { steps, error } = buildThompsonSteps('a)')
+    expect(steps).toHaveLength(0)
+    expect(error).toBeDefined()
+    expect(error).toContain('Unexpected character')
   })
 })
 
@@ -216,7 +224,7 @@ describe('very hard — "(a+b)*c"', () => {
 
 // ---- Very Hard: pipe-style union and double star ----
 
-describe('very hard — "a**" (double star is idempotent)', () => {
+describe(' "a**" (double star is idempotent)', () => {
   it('parses without error', () => {
     const { error } = buildThompsonSteps('a**')
     expect(error).toBeUndefined()
@@ -228,5 +236,230 @@ describe('very hard — "a**" (double star is idempotent)', () => {
     const outerStar = steps[2]!
     expect(outerStar.template).toBe('star')
     expect(outerStar.fragmentStartId).toBe(outerStar.fragmentFinalId)
+  })
+})
+
+// ---- Very Hard: triple union "a+b+c" ----
+
+describe('triple union "a+b+c"', () => {
+  it('produces 5 steps in left-associative post-order: a, b, union(a+b), c, union((a+b)+c)', () => {
+    const { steps } = buildThompsonSteps('a+b+c')
+    expect(steps).toHaveLength(5)
+    expect(steps[0]!.template).toBe('symbol') // a
+    expect(steps[1]!.template).toBe('symbol') // b
+    expect(steps[2]!.template).toBe('union')  // a+b
+    expect(steps[3]!.template).toBe('symbol') // c
+    expect(steps[4]!.template).toBe('union')  // (a+b)+c
+  })
+
+  it('subExpr of the two union steps matches the correct substrings', () => {
+    const { steps } = buildThompsonSteps('a+b+c')
+    expect(steps[2]!.subExpr).toBe('a+b')
+    expect(steps[4]!.subExpr).toBe('a+b+c')
+  })
+
+  it('final NFA has 10 states and 11 transitions', () => {
+    const { steps } = buildThompsonSteps('a+b+c')
+    const nfa = steps.at(-1)!.nfaAfter
+    expect(nfa.states).toHaveLength(10)
+    expect(nfa.transitions).toHaveLength(11)
+  })
+
+  it('alphabet contains a, b, and c', () => {
+    const { steps } = buildThompsonSteps('a+b+c')
+    const alpha = steps.at(-1)!.nfaAfter.alphabet
+    expect(alpha).toContain('a')
+    expect(alpha).toContain('b')
+    expect(alpha).toContain('c')
+  })
+})
+
+// ---- Very Hard: union of unions "(a+b)(c+d)" ----
+
+describe('union-product "(a+b)(c+d)"', () => {
+  it('produces 7 steps: a, b, union(a+b), c, d, union(c+d), concat', () => {
+    const { steps } = buildThompsonSteps('(a+b)(c+d)')
+    expect(steps).toHaveLength(7)
+    expect(steps[0]!.template).toBe('symbol')
+    expect(steps[1]!.template).toBe('symbol')
+    expect(steps[2]!.template).toBe('union')
+    expect(steps[3]!.template).toBe('symbol')
+    expect(steps[4]!.template).toBe('symbol')
+    expect(steps[5]!.template).toBe('union')
+    expect(steps[6]!.template).toBe('concat')
+  })
+
+  it('union subExpr values are "(a+b)" and "(c+d)"', () => {
+    const { steps } = buildThompsonSteps('(a+b)(c+d)')
+    expect(steps[2]!.subExpr).toBe('(a+b)')
+    expect(steps[5]!.subExpr).toBe('(c+d)')
+    expect(steps[6]!.subExpr).toBe('(a+b)(c+d)')
+  })
+
+  it('final NFA has 12 states and 13 transitions', () => {
+    const { steps } = buildThompsonSteps('(a+b)(c+d)')
+    const nfa = steps.at(-1)!.nfaAfter
+    expect(nfa.states).toHaveLength(12)
+    expect(nfa.transitions).toHaveLength(13)
+  })
+})
+
+// ---- Hard: pipe-style union "a+b" ----
+
+describe('pipe-style union "a+b"', () => {
+  it('parses without error and produces 3 steps', () => {
+    const { steps, error } = buildThompsonSteps('a|b')
+    expect(error).toBeUndefined()
+    expect(steps).toHaveLength(3)
+    expect(steps[2]!.template).toBe('union')
+  })
+
+  it('subExpr on union step is "a|b" (preserves pipe character)', () => {
+    const { steps } = buildThompsonSteps('a|b')
+    expect(steps[2]!.subExpr).toBe('a|b')
+  })
+
+  it('produces same NFA structure as "a+b": 6 states, 6 transitions', () => {
+    const { steps } = buildThompsonSteps('a|b')
+    const nfa = steps.at(-1)!.nfaAfter
+    expect(nfa.states).toHaveLength(6)
+    expect(nfa.transitions).toHaveLength(6)
+  })
+})
+
+// ---- Hard: union with epsilon "a+ε" ----
+
+describe('hard — union with epsilon "a+ε"', () => {
+  it('parses without error and produces 3 steps', () => {
+    const { steps, error } = buildThompsonSteps(`a+${EPSILON}`)
+    expect(error).toBeUndefined()
+    expect(steps).toHaveLength(3)
+    expect(steps[1]!.template).toBe('epsilon')
+    expect(steps[2]!.template).toBe('union')
+  })
+
+  it('alphabet contains only "a" (epsilon not in alphabet)', () => {
+    const { steps } = buildThompsonSteps(`a+${EPSILON}`)
+    const alpha = steps.at(-1)!.nfaAfter.alphabet
+    expect(alpha).toContain('a')
+    expect(alpha).not.toContain(EPSILON)
+  })
+})
+
+// ---- Very Hard: deeply nested "a*(b+c)*d" ----
+
+describe('very hard — "a*(b+c)*d"', () => {
+  it('produces 9 steps in correct post-order', () => {
+    const { steps } = buildThompsonSteps('a*(b+c)*d')
+    expect(steps).toHaveLength(9)
+    expect(steps[0]!.template).toBe('symbol') // a
+    expect(steps[1]!.template).toBe('star')   // a*
+    expect(steps[2]!.template).toBe('symbol') // b
+    expect(steps[3]!.template).toBe('symbol') // c
+    expect(steps[4]!.template).toBe('union')  // b+c
+    expect(steps[5]!.template).toBe('star')   // (b+c)*
+    expect(steps[6]!.template).toBe('concat') // a*(b+c)*
+    expect(steps[7]!.template).toBe('symbol') // d
+    expect(steps[8]!.template).toBe('concat') // a*(b+c)*d
+  })
+
+  it('subExpr on each step matches the correct regex substring', () => {
+    const { steps } = buildThompsonSteps('a*(b+c)*d')
+    expect(steps[0]!.subExpr).toBe('a')
+    expect(steps[1]!.subExpr).toBe('a*')
+    expect(steps[2]!.subExpr).toBe('b')
+    expect(steps[3]!.subExpr).toBe('c')
+    expect(steps[4]!.subExpr).toBe('(b+c)')
+    expect(steps[5]!.subExpr).toBe('(b+c)*')
+    expect(steps[6]!.subExpr).toBe('a*(b+c)*')
+    expect(steps[7]!.subExpr).toBe('d')
+    expect(steps[8]!.subExpr).toBe('a*(b+c)*d')
+  })
+
+  it('final NFA has 12 states and 14 transitions', () => {
+    const { steps } = buildThompsonSteps('a*(b+c)*d')
+    const nfa = steps.at(-1)!.nfaAfter
+    expect(nfa.states).toHaveLength(12)
+    expect(nfa.transitions).toHaveLength(14)
+  })
+
+  it('alphabet contains a, b, c, and d', () => {
+    const { steps } = buildThompsonSteps('a*(b+c)*d')
+    const alpha = steps.at(-1)!.nfaAfter.alphabet
+    expect(alpha).toContain('a')
+    expect(alpha).toContain('b')
+    expect(alpha).toContain('c')
+    expect(alpha).toContain('d')
+  })
+})
+
+// ---- printAST — covers lines 415-438 ----
+
+describe('printAST — covers all AST node types', () => {
+  it('handles a symbol node without throwing', () => {
+    const node = { type: 'symbol', char: 'a', start: 0, end: 0 }
+    expect(() => printAST(node as Parameters<typeof printAST>[0])).not.toThrow()
+  })
+
+  it('handles an epsilon node without throwing', () => {
+    const node = { type: 'epsilon', start: 0, end: 0 }
+    expect(() => printAST(node as Parameters<typeof printAST>[0])).not.toThrow()
+  })
+
+  it('handles a union node with two symbol children without throwing', () => {
+    const node = {
+      type: 'union',
+      start: 0,
+      end: 2,
+      left:  { type: 'symbol', char: 'a', start: 0, end: 0 },
+      right: { type: 'symbol', char: 'b', start: 2, end: 2 },
+    }
+    expect(() => printAST(node as Parameters<typeof printAST>[0])).not.toThrow()
+  })
+
+  it('handles a concat node without throwing', () => {
+    const node = {
+      type: 'concat',
+      start: 0,
+      end: 1,
+      left:  { type: 'symbol', char: 'a', start: 0, end: 0 },
+      right: { type: 'symbol', char: 'b', start: 1, end: 1 },
+    }
+    expect(() => printAST(node as Parameters<typeof printAST>[0])).not.toThrow()
+  })
+
+  it('handles a star node without throwing', () => {
+    const node = {
+      type: 'star',
+      start: 0,
+      end: 1,
+      operand: { type: 'symbol', char: 'a', start: 0, end: 0 },
+    }
+    expect(() => printAST(node as Parameters<typeof printAST>[0])).not.toThrow()
+  })
+
+  it('handles non-zero indent parameter without throwing', () => {
+    const node = { type: 'symbol', char: 'x', start: 0, end: 0 }
+    expect(() => printAST(node as Parameters<typeof printAST>[0], 4)).not.toThrow()
+  })
+})
+
+// ---- testParse — covers lines 442-452 ----
+
+describe('testParse — debug utility', () => {
+  it('logs steps for a valid regex without throwing', () => {
+    expect(() => testParse('a+b')).not.toThrow()
+  })
+
+  it('logs an error for an invalid regex without throwing', () => {
+    expect(() => testParse('@invalid')).not.toThrow()
+  })
+
+  it('handles a complex valid regex without throwing', () => {
+    expect(() => testParse('(a+b)*c')).not.toThrow()
+  })
+
+  it('handles an empty string (parses to error) without throwing', () => {
+    expect(() => testParse('')).not.toThrow()
   })
 })

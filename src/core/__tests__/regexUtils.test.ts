@@ -153,3 +153,87 @@ describe('regexEquals', () => {
     expect(regexEquals('a*', 'a')).toBe(false)
   })
 })
+
+// ---- findMatchingParen returning -1 (lines 122-123) ----
+
+describe('findMatchingParen — unclosed parenthesis edge case', () => {
+  it('normalize leaves an unclosed-paren expression unchanged', () => {
+    // findMatchingParen returns -1 for "(ab" → stripOuterParens leaves it alone
+    expect(normalize('(ab')).toBe('(ab')
+  })
+
+  it('star wraps an unclosed-paren string in outer parens (no added closing paren)', () => {
+    // needsParensForStar('(ab'): starts with '(' but findMatchingParen returns -1 → needs parens
+    // The function wraps as-is: '(' + '(ab' + ')*' = '((ab)*'
+    expect(star('(ab')).toBe('((ab)*')
+  })
+})
+
+// ---- Complex concatenate ----
+
+describe('concatenate — complex expressions', () => {
+  it('handles a starred group on the left (no extra parens needed)', () => {
+    expect(concatenate('(a+b)*', 'c')).toBe('(a+b)*c')
+  })
+
+  it('wraps both sides when both contain top-level unions', () => {
+    expect(concatenate('a+b+c', 'x+y')).toBe('(a+b+c)(x+y)')
+  })
+
+  it('wraps left union-of-stars expression', () => {
+    expect(concatenate('a*+b*', 'c')).toBe('(a*+b*)c')
+  })
+
+  it('handles deeply nested concat without unnecessary parens', () => {
+    // Neither 'a*b' nor 'c*d' has a top-level union
+    expect(concatenate('a*b', 'c*d')).toBe('a*bc*d')
+  })
+})
+
+// ---- Complex union ----
+
+describe('union — complex expressions', () => {
+  it('creates a three-way union via chaining', () => {
+    expect(union(union('a', 'b'), 'c')).toBe('a+b+c')
+  })
+
+  it('handles union of complex subexpressions', () => {
+    expect(union('a*b', 'c+d')).toBe('a*b+c+d')
+  })
+
+  it('deduplicates complex equal expressions', () => {
+    expect(union('a*b', 'a*b')).toBe('a*b')
+  })
+})
+
+// ---- Complex star ----
+
+describe('star — complex expressions', () => {
+  it('does not re-star an already-starred parenthesised group "(a+b)*"', () => {
+    expect(star('(a+b)*')).toBe('(a+b)*')
+  })
+
+  it('wraps multi-symbol concat expression in parens', () => {
+    expect(star('abc')).toBe('(abc)*')
+  })
+
+  it('wraps a union-of-stars expression', () => {
+    expect(star('a*+b*')).toBe('(a*+b*)*')
+  })
+})
+
+// ---- Complex eliminationFormula ----
+
+describe('eliminationFormula — all four R-values non-empty', () => {
+  it('very hard: R1=a, R2=b, R3=c, R4=d → d+ab*c', () => {
+    expect(eliminationFormula('a', 'b', 'c', 'd')).toBe('d+ab*c')
+  })
+
+  it('very hard: union R1 and ε R3 → (a+b)(c+d)*', () => {
+    expect(eliminationFormula('a+b', 'c+d', EPSILON, EMPTY_SET)).toBe('(a+b)(c+d)*')
+  })
+
+  it('very hard: all union expressions → (a+b)(c+d)*(e+f)+g', () => {
+    expect(eliminationFormula('a+b', 'c+d', 'e+f', 'g')).toBe('g+(a+b)(c+d)*(e+f)')
+  })
+})

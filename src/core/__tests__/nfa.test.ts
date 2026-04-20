@@ -193,6 +193,48 @@ describe('nfaToGTG', () => {
   })
 })
 
+describe('nfaToGTG — complex merging', () => {
+  it('merges three parallel transitions into a 3-way union symbol', () => {
+    const nfa: NFA = {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
+        { id: 't1', source: 'q0', target: 'q1', symbol: 'b' },
+        { id: 't2', source: 'q0', target: 'q1', symbol: 'c' },
+      ],
+      alphabet: ['a', 'b', 'c'],
+    }
+    const gtg = nfaToGTG(nfa)
+    expect(gtg.transitions).toHaveLength(1)
+    expect(gtg.transitions[0]!.symbol).toBe('a+b+c')
+  })
+
+  it('preserves a self-loop as a separate transition while merging parallel non-loop ones', () => {
+    const nfa: NFA = {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q0', symbol: 'a' }, // self-loop
+        { id: 't1', source: 'q0', target: 'q1', symbol: 'b' },
+        { id: 't2', source: 'q0', target: 'q1', symbol: 'c' },
+      ],
+      alphabet: ['a', 'b', 'c'],
+    }
+    const gtg = nfaToGTG(nfa)
+    // Self-loop is one transition, parallel b+c is another
+    expect(gtg.transitions).toHaveLength(2)
+    const selfLoop = gtg.transitions.find(t => t.source === 'q0' && t.target === 'q0')
+    const toQ1 = gtg.transitions.find(t => t.source === 'q0' && t.target === 'q1')
+    expect(selfLoop?.symbol).toBe('a')
+    expect(toQ1?.symbol).toBe('b+c')
+  })
+})
+
 describe('cloneNFA', () => {
   it('returns a deep copy — mutations to the clone do not affect the original', () => {
     const nfa = makeNFA()
