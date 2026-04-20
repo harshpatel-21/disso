@@ -6,7 +6,8 @@ import {
   extractFinalRegex,
   getEliminableStates,
 } from '../stateElimination'
-import { resetCounters } from '../nfa'
+import { resetCounters, nfaToGTG } from '../nfa'
+import { buildThompsonSteps } from '../thompson'
 import type { GTG } from '../types'
 import { EPSILON, EMPTY_SET } from '../types'
 
@@ -14,69 +15,184 @@ beforeEach(() => {
   resetCounters()
 })
 
-// ---- Shared GTG builders ----
-
-/** Easy: 2-state NFA accepts exactly "a" — q0 --a--> q1 */
-function makeEasyGTG(): GTG {
-  return {
-    states: [
-      { id: 'q0', label: 'q0', isStart: true, isFinal: false },
-      { id: 'q1', label: 'q1', isStart: false, isFinal: true },
-    ],
-    transitions: [{ id: 't0', source: 'q0', target: 'q1', symbol: 'a' }],
-    alphabet: ['a'],
-  }
+type Fixture = {
+  regex: string
+  gtg: GTG
+  expectedRegex?: string
 }
 
-/** Medium: 3-state NFA accepts "ab" — q0 --a--> q1 --b--> q2 */
-function makeMediumGTG(): GTG {
-  return {
-    states: [
-      { id: 'q0', label: 'q0', isStart: true, isFinal: false },
-      { id: 'q1', label: 'q1', isStart: false, isFinal: false },
-      { id: 'q2', label: 'q2', isStart: false, isFinal: true },
-    ],
-    transitions: [
-      { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
-      { id: 't1', source: 'q1', target: 'q2', symbol: 'b' },
-    ],
-    alphabet: ['a', 'b'],
-  }
-}
-
-/** Hard: 3-state NFA accepts "a+b" — q0 --a--> q1, q0 --b--> q2, q1 and q2 are final */
-function makeHardGTG(): GTG {
-  return {
-    states: [
-      { id: 'q0', label: 'q0', isStart: true, isFinal: false },
-      { id: 'q1', label: 'q1', isStart: false, isFinal: true },
-      { id: 'q2', label: 'q2', isStart: false, isFinal: true },
-    ],
-    transitions: [
-      { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
-      { id: 't1', source: 'q0', target: 'q2', symbol: 'b' },
-    ],
-    alphabet: ['a', 'b'],
-  }
-}
+type HandBuiltFixtureName =
+  | 'easy'
+  | 'medium'
+  | 'hard'
+  | 'veryHard'
+  | 'linear'
+  | 'diamond'
+  | 'selfLoop'
 
 /**
- * Very Hard: NFA accepts "a*b+" (= a*bb* after elimination)
- * q0 (start, self-loop a) --b--> q1 (final, self-loop b)
+ * This function 
  */
-function makeVeryHardGTG(): GTG {
-  return {
-    states: [
-      { id: 'q0', label: 'q0', isStart: true, isFinal: false },
-      { id: 'q1', label: 'q1', isStart: false, isFinal: true },
-    ],
-    transitions: [
-      { id: 't0', source: 'q0', target: 'q0', symbol: 'a' },
-      { id: 't1', source: 'q0', target: 'q1', symbol: 'b' },
-      { id: 't2', source: 'q1', target: 'q1', symbol: 'b' },
-    ],
-    alphabet: ['a', 'b'],
+function toEngineRegex(regex: string): string {
+  return regex.replace(/∗/g, '*').replace(/ε/g, EPSILON).replace(/\s+/g, '')
+}
+
+function gtgFromRegex(regex: string): GTG {
+  const engineRegex = toEngineRegex(regex)
+  const { steps, error } = buildThompsonSteps(engineRegex)
+
+  if (error) {
+    throw new Error(`Failed to build fixture GTG for regex "${regex}": ${error}`)
   }
+
+  const finalNFA = steps.at(-1)?.nfaAfter
+  if (!finalNFA) {
+    throw new Error(`No Thompson steps generated for regex "${regex}"`)
+  }
+
+  return nfaToGTG(finalNFA)
+}
+
+// ---- Shared GTG fixtures (replaces makeEasyGTG/makeHardGTG-style builders) ----
+
+const handBuiltFixtures: Record<HandBuiltFixtureName, Fixture> = {
+  easy: {
+    regex: 'a',
+    expectedRegex: 'a',
+    gtg: {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: true },
+      ],
+      transitions: [{ id: 't0', source: 'q0', target: 'q1', symbol: 'a' }],
+      alphabet: ['a'],
+    },
+  },
+  medium: {
+    regex: 'ab',
+    expectedRegex: 'ab',
+    gtg: {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
+        { id: 'q2', label: 'q2', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
+        { id: 't1', source: 'q1', target: 'q2', symbol: 'b' },
+      ],
+      alphabet: ['a', 'b'],
+    },
+  },
+  hard: {
+    regex: 'a+b',
+    expectedRegex: 'a+b',
+    gtg: {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: true },
+        { id: 'q2', label: 'q2', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
+        { id: 't1', source: 'q0', target: 'q2', symbol: 'b' },
+      ],
+      alphabet: ['a', 'b'],
+    },
+  },
+  veryHard: {
+    regex: 'a*b+',
+    expectedRegex: 'a*bb*',
+    gtg: {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q0', symbol: 'a' },
+        { id: 't1', source: 'q0', target: 'q1', symbol: 'b' },
+        { id: 't2', source: 'q1', target: 'q1', symbol: 'b' },
+      ],
+      alphabet: ['a', 'b'],
+    },
+  },
+  linear: {
+    regex: 'abc',
+    expectedRegex: 'abc',
+    gtg: {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
+        { id: 'q2', label: 'q2', isStart: false, isFinal: false },
+        { id: 'q3', label: 'q3', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
+        { id: 't1', source: 'q1', target: 'q2', symbol: 'b' },
+        { id: 't2', source: 'q2', target: 'q3', symbol: 'c' },
+      ],
+      alphabet: ['a', 'b', 'c'],
+    },
+  },
+  diamond: {
+    regex: 'ac+bd',
+    expectedRegex: 'ac+bd',
+    gtg: {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
+        { id: 'q2', label: 'q2', isStart: false, isFinal: false },
+        { id: 'q3', label: 'q3', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
+        { id: 't1', source: 'q0', target: 'q2', symbol: 'b' },
+        { id: 't2', source: 'q1', target: 'q3', symbol: 'c' },
+        { id: 't3', source: 'q2', target: 'q3', symbol: 'd' },
+      ],
+      alphabet: ['a', 'b', 'c', 'd'],
+    },
+  },
+  selfLoop: {
+    regex: 'a(b+c)*d',
+    expectedRegex: 'a(b+c)*d',
+    gtg: {
+      states: [
+        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
+        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
+        { id: 'q2', label: 'q2', isStart: false, isFinal: true },
+      ],
+      transitions: [
+        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
+        { id: 't1', source: 'q1', target: 'q1', symbol: 'b' },
+        { id: 't2', source: 'q1', target: 'q1', symbol: 'c' },
+        { id: 't3', source: 'q1', target: 'q2', symbol: 'd' },
+      ],
+      alphabet: ['a', 'b', 'c', 'd'],
+    },
+  },
+}
+
+const additionalRegexes = [
+  'ab*c',
+  '(abc)*+(cba)*',
+  '(b+c+ab(b)*)*c',
+  '(b+c+ab+ac)*(a+ε)',
+  '(a+b+c)*abc(a+b+c)*',
+  '(b+c+a(b+c)*a)*',
+]
+
+const generatedFixtures: Record<string, Fixture> = {}
+for (const [index, regex] of additionalRegexes.entries()) {
+  generatedFixtures[`generated_${index + 1}`] = {
+    regex,
+    gtg: gtgFromRegex(regex),
+  }
+}
+
+const fixtureCatalog: Record<string, Fixture> = {
+  ...handBuiltFixtures,
+  ...generatedFixtures,
 }
 
 // ---- Helper: run full elimination until only S and F remain ----
@@ -108,7 +224,7 @@ describe('preprocess — no original start state (explanation fallback branch)',
 
 describe('preprocess', () => {
   it('adds a new start state S and final state F', () => {
-    const { gtg } = preprocess(makeEasyGTG())
+    const { gtg } = preprocess(handBuiltFixtures.easy.gtg)
     const start = gtg.states.find(s => s.isStart)
     const final = gtg.states.find(s => s.isFinal)
     expect(start?.label).toBe('S')
@@ -116,7 +232,7 @@ describe('preprocess', () => {
   })
 
   it('original start/final flags are cleared', () => {
-    const { gtg } = preprocess(makeEasyGTG())
+    const { gtg } = preprocess(handBuiltFixtures.easy.gtg)
     const q0 = gtg.states.find(s => s.id === 'q0')!
     const q1 = gtg.states.find(s => s.id === 'q1')!
     expect(q0.isStart).toBe(false)
@@ -124,28 +240,28 @@ describe('preprocess', () => {
   })
 
   it('adds ε-transition from S to original start', () => {
-    const { gtg } = preprocess(makeEasyGTG())
+    const { gtg } = preprocess(handBuiltFixtures.easy.gtg)
     const S = gtg.states.find(s => s.isStart)!
     const sToQ0 = gtg.transitions.find(t => t.source === S.id && t.target === 'q0')
     expect(sToQ0?.symbol).toBe(EPSILON)
   })
 
   it('adds ε-transition from original final(s) to F', () => {
-    const { gtg } = preprocess(makeEasyGTG())
+    const { gtg } = preprocess(handBuiltFixtures.easy.gtg)
     const F = gtg.states.find(s => s.isFinal)!
     const q1ToF = gtg.transitions.find(t => t.source === 'q1' && t.target === F.id)
     expect(q1ToF?.symbol).toBe(EPSILON)
   })
 
   it('adds ε-transitions for all original final states (multi-final NFA)', () => {
-    const { gtg } = preprocess(makeHardGTG())
+    const { gtg } = preprocess(handBuiltFixtures.hard.gtg)
     const F = gtg.states.find(s => s.isFinal)!
     const toF = gtg.transitions.filter(t => t.target === F.id)
     expect(toF).toHaveLength(2)
   })
 
   it('returns a step record of type preprocess', () => {
-    const { step } = preprocess(makeEasyGTG())
+    const { step } = preprocess(handBuiltFixtures.easy.gtg)
     expect(step.type).toBe('preprocess')
   })
 })
@@ -154,7 +270,7 @@ describe('preprocess', () => {
 
 describe('getEliminableStates', () => {
   it('returns all non-start, non-final states', () => {
-    const { gtg } = preprocess(makeEasyGTG())
+    const { gtg } = preprocess(handBuiltFixtures.easy.gtg)
     const eliminable = getEliminableStates(gtg)
     const labels = eliminable.map(s => s.label)
     expect(labels).toContain('q0')
@@ -168,13 +284,13 @@ describe('getEliminableStates', () => {
 
 describe('computePathUpdates — easy NFA', () => {
   it('returns one path update for the single predecessor/successor pair', () => {
-    const { gtg } = preprocess(makeEasyGTG())
+    const { gtg } = preprocess(handBuiltFixtures.easy.gtg)
     const updates = computePathUpdates(gtg, 'q0')
     expect(updates).toHaveLength(1)
   })
 
   it('R1=ε, R2=∅, R3=a, R4=∅ → expectedResult=a', () => {
-    const { gtg } = preprocess(makeEasyGTG())
+    const { gtg } = preprocess(handBuiltFixtures.easy.gtg)
     const [update] = computePathUpdates(gtg, 'q0')!
     expect(update!.R1).toBe(EPSILON)
     expect(update!.R2).toBe(EMPTY_SET)
@@ -186,7 +302,7 @@ describe('computePathUpdates — easy NFA', () => {
 
 describe('computePathUpdates — very hard NFA (self-loop)', () => {
   it('incorporates self-loop as R2 when eliminating q0', () => {
-    const { gtg } = preprocess(makeVeryHardGTG())
+    const { gtg } = preprocess(handBuiltFixtures.veryHard.gtg)
     const updates = computePathUpdates(gtg, 'q0')
     expect(updates).toHaveLength(1)
     const [u] = updates
@@ -199,21 +315,21 @@ describe('computePathUpdates — very hard NFA (self-loop)', () => {
 
 describe('applyElimination', () => {
   it('removes the eliminated state from the GTG', () => {
-    const { gtg } = preprocess(makeEasyGTG())
+    const { gtg } = preprocess(handBuiltFixtures.easy.gtg)
     const updates = computePathUpdates(gtg, 'q0')
     const result = applyElimination(gtg, 'q0', updates)
     expect(result.states.map(s => s.id)).not.toContain('q0')
   })
 
   it('removes all transitions involving the eliminated state', () => {
-    const { gtg } = preprocess(makeEasyGTG())
+    const { gtg } = preprocess(handBuiltFixtures.easy.gtg)
     const updates = computePathUpdates(gtg, 'q0')
     const result = applyElimination(gtg, 'q0', updates)
     expect(result.transitions.every(t => t.source !== 'q0' && t.target !== 'q0')).toBe(true)
   })
 
   it('adds or updates a direct transition for each path update', () => {
-    const { gtg } = preprocess(makeEasyGTG())
+    const { gtg } = preprocess(handBuiltFixtures.easy.gtg)
     const S = gtg.states.find(s => s.isStart)!
     const updates = computePathUpdates(gtg, 'q0')
     const result = applyElimination(gtg, 'q0', updates)
@@ -253,21 +369,19 @@ describe('extractFinalRegex', () => {
 // ---- End-to-end elimination ----
 
 describe('full state elimination pipeline', () => {
-  it('easy — NFA accepting "a" produces regex "a"', () => {
-    expect(fullyEliminate(makeEasyGTG())).toBe('a')
-  })
+  for (const [name, fixture] of Object.entries(fixtureCatalog)) {
+    it(`${name} fixture (${fixture.regex}) produces a valid final regex`, () => {
+      const result = fullyEliminate(fixture.gtg)
 
-  it('medium — NFA accepting "ab" produces regex "ab"', () => {
-    expect(fullyEliminate(makeMediumGTG())).toBe('ab')
-  })
-
-  it('hard — NFA accepting "a+b" produces regex "a+b"', () => {
-    expect(fullyEliminate(makeHardGTG())).toBe('a+b')
-  })
-
-  it('very hard — NFA accepting "a*b+" produces regex "a*bb*"', () => {
-    expect(fullyEliminate(makeVeryHardGTG())).toBe('a*bb*')
-  })
+      if (fixture.expectedRegex) {
+        expect(result).toBe(fixture.expectedRegex)
+      } else {
+        expect(result).not.toBe(EMPTY_SET)
+        const parsed = buildThompsonSteps(toEngineRegex(result))
+        expect(parsed.error).toBeUndefined()
+      }
+    })
+  }
 })
 
 // ---- extractFinalRegex edge cases (covers lines 214-215) ----
@@ -293,65 +407,6 @@ describe('extractFinalRegex — missing start or final state', () => {
 
   it('returns ∅ when GTG is completely empty', () => {
     expect(extractFinalRegex({ states: [], transitions: [], alphabet: [] })).toBe(EMPTY_SET)
-  })
-})
-
-// ---- Complex end-to-end pipelines ----
-
-describe('complex elimination pipelines', () => {
-  it('4-state linear NFA: q0→q1(a)→q2(b)→q3(c) produces "abc"', () => {
-    const linearGTG: GTG = {
-      states: [
-        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
-        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
-        { id: 'q2', label: 'q2', isStart: false, isFinal: false },
-        { id: 'q3', label: 'q3', isStart: false, isFinal: true },
-      ],
-      transitions: [
-        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
-        { id: 't1', source: 'q1', target: 'q2', symbol: 'b' },
-        { id: 't2', source: 'q2', target: 'q3', symbol: 'c' },
-      ],
-      alphabet: ['a', 'b', 'c'],
-    }
-    expect(fullyEliminate(linearGTG)).toBe('abc')
-  })
-
-  it('diamond NFA: q0→q1(a), q0→q2(b), q1→q3(c), q2→q3(d) produces "ac+bd"', () => {
-    const diamondGTG: GTG = {
-      states: [
-        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
-        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
-        { id: 'q2', label: 'q2', isStart: false, isFinal: false },
-        { id: 'q3', label: 'q3', isStart: false, isFinal: true },
-      ],
-      transitions: [
-        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
-        { id: 't1', source: 'q0', target: 'q2', symbol: 'b' },
-        { id: 't2', source: 'q1', target: 'q3', symbol: 'c' },
-        { id: 't3', source: 'q2', target: 'q3', symbol: 'd' },
-      ],
-      alphabet: ['a', 'b', 'c', 'd'],
-    }
-    expect(fullyEliminate(diamondGTG)).toBe('ac+bd')
-  })
-
-  it('NFA with two self-loops on intermediate state: q0-a->q1(-b,-c self-loops)-d->q2 produces "a(b+c)*d"', () => {
-    const selfLoopGTG: GTG = {
-      states: [
-        { id: 'q0', label: 'q0', isStart: true, isFinal: false },
-        { id: 'q1', label: 'q1', isStart: false, isFinal: false },
-        { id: 'q2', label: 'q2', isStart: false, isFinal: true },
-      ],
-      transitions: [
-        { id: 't0', source: 'q0', target: 'q1', symbol: 'a' },
-        { id: 't1', source: 'q1', target: 'q1', symbol: 'b' },
-        { id: 't2', source: 'q1', target: 'q1', symbol: 'c' },
-        { id: 't3', source: 'q1', target: 'q2', symbol: 'd' },
-      ],
-      alphabet: ['a', 'b', 'c', 'd'],
-    }
-    expect(fullyEliminate(selfLoopGTG)).toBe('a(b+c)*d')
   })
 })
 
