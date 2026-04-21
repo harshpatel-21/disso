@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AppProvider } from '../../state/AppContext'
 import { NotificationProvider } from '../layout/NotificationArea'
-import { NfaToRegexPanel } from '../conversion/NfaToRegexPanel'
+import { StateEliminationPanel } from '../conversion/StateEliminationPanel'
 import { NFAInputPanel } from '../nfa-input/NFAInputPanel'
 import { examples } from '../../data/examples'
 
@@ -15,34 +15,34 @@ function Wrapper({ children }: { children: React.ReactNode }) {
   )
 }
 
-describe('NfaToRegexPanel — idle phase (initial render)', () => {
+describe('StateEliminationPanel — idle phase (initial render)', () => {
   it('renders the "State Elimination" heading', () => {
-    render(<NfaToRegexPanel />, { wrapper: Wrapper })
+    render(<StateEliminationPanel />, { wrapper: Wrapper })
     expect(screen.getByRole('heading', { name: /State Elimination/i })).toBeInTheDocument()
   })
 
   it('shows "← Back" button when phase is idle', () => {
-    render(<NfaToRegexPanel />, { wrapper: Wrapper })
+    render(<StateEliminationPanel />, { wrapper: Wrapper })
     expect(screen.getByRole('button', { name: /Back/i })).toBeInTheDocument()
   })
 
   it('does not show the "Complete Elimination" button when idle', () => {
-    render(<NfaToRegexPanel />, { wrapper: Wrapper })
+    render(<StateEliminationPanel />, { wrapper: Wrapper })
     expect(screen.queryByRole('button', { name: /Complete Elimination/i })).not.toBeInTheDocument()
   })
 
   it('does not show the final regex section when idle', () => {
-    render(<NfaToRegexPanel />, { wrapper: Wrapper })
+    render(<StateEliminationPanel />, { wrapper: Wrapper })
     expect(screen.queryByText(/Final Regular Expression/i)).not.toBeInTheDocument()
   })
 })
 
-describe('NfaToRegexPanel — after starting conversion from an example NFA', () => {
+describe('StateEliminationPanel — after starting conversion from an example NFA', () => {
   async function startConversionFromExample() {
     render(
       <Wrapper>
         <NFAInputPanel />
-        <NfaToRegexPanel />
+        <StateEliminationPanel />
       </Wrapper>
     )
     // Load a valid example NFA

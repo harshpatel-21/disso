@@ -7,7 +7,7 @@ import { StateSelector } from './StateSelector'
 import { PathUpdateForm } from './PathUpdateForm'
 import { Button } from '../common/Button'
 
-export function NfaToRegexPanel() {
+export function StateEliminationPanel() {
   const {
     phase,
     finalRegex,
