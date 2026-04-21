@@ -64,7 +64,7 @@ export function StateEliminationPanel() {
         <>
           <StateSelector />
           {canRevert && (
-            <Button variant="secondary" onClick={revertElimination}>
+            <Button size="sm" variant="secondary" onClick={revertElimination}>
               Revert Last Elimination
             </Button>
           )}
