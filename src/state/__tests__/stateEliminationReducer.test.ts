@@ -179,6 +179,26 @@ describe('stateEliminationReducer — SUBMIT_PATH_ANSWER', () => {
   })
 })
 
+describe('stateEliminationReducer — SUBMIT_PATH_ANSWER multi-path', () => {
+  it('leaves untargeted paths unchanged when pathIndex targets a specific entry', () => {
+    const path0 = makePathUpdate('S', 'q0', 'ab')
+    const path1 = makePathUpdate('q0', 'F', 'cd')
+    const state: StateEliminationState = {
+      ...initialStateEliminationState,
+      currentPathUpdates: [path0, path1],
+    }
+
+    const next = stateEliminationReducer(state, {
+      type: 'SUBMIT_PATH_ANSWER',
+      payload: { pathIndex: 1, userInput: 'cd' },
+    })
+
+    // path0 (i=0) hits the `i !== pathIndex` branch and is returned unchanged
+    expect(next.currentPathUpdates[0]!.isCorrect).toBeUndefined()
+    expect(next.currentPathUpdates[1]!.isCorrect).toBe(true)
+  })
+})
+
 describe('stateEliminationReducer — ADVANCE_PATH', () => {
   it('increments currentPathIndex when more paths remain', () => {
     // Arrange
@@ -226,6 +246,24 @@ describe('stateEliminationReducer — AUTO_COMPLETE_PATH', () => {
     // Assert
     expect(next.currentPathUpdates[0]!.userInput).toBe('ab')
     expect(next.currentPathUpdates[0]!.isCorrect).toBe(true)
+  })
+})
+
+describe('stateEliminationReducer — AUTO_COMPLETE_PATH multi-path', () => {
+  it('leaves untargeted paths unchanged when targeting a specific index', () => {
+    const path0 = makePathUpdate('S', 'q0', 'ab')
+    const path1 = makePathUpdate('q0', 'F', 'cd')
+    const state: StateEliminationState = {
+      ...initialStateEliminationState,
+      currentPathUpdates: [path0, path1],
+    }
+
+    const next = stateEliminationReducer(state, { type: 'AUTO_COMPLETE_PATH', payload: 1 })
+
+    // path0 (i=0) hits the `i !== payload` branch and is returned unchanged
+    expect(next.currentPathUpdates[0]!.isCorrect).toBeUndefined()
+    expect(next.currentPathUpdates[1]!.userInput).toBe('cd')
+    expect(next.currentPathUpdates[1]!.isCorrect).toBe(true)
   })
 })
 
@@ -357,6 +395,30 @@ describe('stateEliminationReducer — REVERT_LAST_ELIMINATION', () => {
     expect(next.history[next.history.length - 1]!.type).toBe('revert')
   })
 
+  it('uses "unknown" as the state label when the eliminate step has no stateToRemove', () => {
+    const gtgBefore = makeGTG(['S', 'q0', 'F'])
+    const gtgAfter = makeGTG(['S', 'F'])
+    // eliminate step without stateToRemove — covers the `: 'unknown'` branch at line 165
+    const eliminateStep: EliminationStep = {
+      type: 'eliminate',
+      affectedPaths: [],
+      explanation: 'eliminate without stateToRemove',
+      gtgBefore,
+      gtgAfter,
+      // stateToRemove intentionally omitted
+    }
+    const state: StateEliminationState = {
+      ...initialStateEliminationState,
+      phase: 'selecting-state',
+      gtg: gtgAfter,
+      history: [eliminateStep],
+      currentStepIndex: 0,
+    }
+
+    const next = stateEliminationReducer(state, { type: 'REVERT_LAST_ELIMINATION' })
+    expect(next.history[next.history.length - 1]!.explanation).toContain('unknown')
+  })
+
   it('returns state unchanged when there is no eliminate step in history', () => {
     // Arrange: only preprocess step, no eliminate
     const gtg = makeGTG(['S', 'F'])
@@ -387,5 +449,12 @@ describe('stateEliminationReducer — RESET_CONVERSION', () => {
 
     // Assert
     expect(next).toEqual(initialStateEliminationState)
+  })
+})
+
+describe('stateEliminationReducer — default case', () => {
+  it('returns the same state reference for an unknown action type', () => {
+    const next = stateEliminationReducer(initialStateEliminationState, { type: 'UNKNOWN_ACTION' } as never)
+    expect(next).toBe(initialStateEliminationState)
   })
 })

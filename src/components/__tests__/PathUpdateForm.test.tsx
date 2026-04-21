@@ -177,3 +177,44 @@ describe('PathUpdateForm — Enter key submission', () => {
     expect(screen.getByText('Correct!')).toBeInTheDocument()
   })
 })
+
+describe('PathUpdateForm — gtg fallback labels', () => {
+  it('falls back to raw state ids when gtg is null', () => {
+    const pathUpdate: PathUpdate = { ...basePathUpdate }
+    render(
+      <PathUpdateForm
+        pathUpdate={pathUpdate}
+        pathIndex={0}
+        removedStateLabel="q1"
+        gtg={null}
+      />, { wrapper: Wrapper }
+    )
+
+    expect(screen.getByText(/q0/)).toBeInTheDocument()
+    expect(screen.getByText(/q2/)).toBeInTheDocument()
+  })
+
+  it('falls back to raw state ids when gtg does not contain matching states', () => {
+    const pathUpdate: PathUpdate = { ...basePathUpdate }
+    const missingGtg: GTG = {
+      states: [
+        { id: 'x', label: 'x', isStart: false, isFinal: false },
+      ],
+      transitions: [],
+      alphabet: [],
+    }
+
+    render(
+      <PathUpdateForm
+        pathUpdate={pathUpdate}
+        pathIndex={0}
+        removedStateLabel="q1"
+        gtg={missingGtg}
+      />, { wrapper: Wrapper }
+    )
+
+    // Should use raw ids when no matching label found
+    expect(screen.getByText(/q0/)).toBeInTheDocument()
+    expect(screen.getByText(/q2/)).toBeInTheDocument()
+  })
+})

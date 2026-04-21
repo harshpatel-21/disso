@@ -410,44 +410,44 @@ function collectAlphabet(node: ASTNode): string[] {
 }
 
 
-// test function to visualize the AST (not exported)
-export function printAST(node: ASTNode, indent = 0): void {
-  const padding = ' '.repeat(indent)
-  switch (node.type) {
-    case 'symbol':
-      console.log(`${padding}Symbol('${node.char}') [${node.start}, ${node.end}]`)
-      break
-    case 'epsilon':
-      console.log(`${padding}Epsilon [${node.start}, ${node.end}]`)
-      break
-    case 'union':
-      console.log(`${padding}Union [${node.start}, ${node.end}]`)
-      printAST(node.left, indent + 2)
-      printAST(node.right, indent + 2)
-      break
-    case 'concat':
-      console.log(`${padding}Concat [${node.start}, ${node.end}]`)
-      printAST(node.left, indent + 2)
-      printAST(node.right, indent + 2)
-      break
-    case 'star':
-      console.log(`${padding}Star [${node.start}, ${node.end}]`)
-      printAST(node.operand, indent + 2)
-      break
-  }
-}
+// // test function to visualize the AST
+// function printAST(node: ASTNode, indent = 0): void {
+//   const padding = ' '.repeat(indent)
+//   switch (node.type) {
+//     case 'symbol':
+//       console.log(`${padding}Symbol('${node.char}') [${node.start}, ${node.end}]`)
+//       break
+//     case 'epsilon':
+//       console.log(`${padding}Epsilon [${node.start}, ${node.end}]`)
+//       break
+//     case 'union':
+//       console.log(`${padding}Union [${node.start}, ${node.end}]`)
+//       printAST(node.left, indent + 2)
+//       printAST(node.right, indent + 2)
+//       break
+//     case 'concat':
+//       console.log(`${padding}Concat [${node.start}, ${node.end}]`)
+//       printAST(node.left, indent + 2)
+//       printAST(node.right, indent + 2)
+//       break
+//     case 'star':
+//       console.log(`${padding}Star [${node.start}, ${node.end}]`)
+//       printAST(node.operand, indent + 2)
+//       break
+//   }
+// }
 
-// test function that stores a regex and prints the AST (not exported)
-export function testParse(regex: string): void {
-  const result = buildThompsonSteps(regex)
-  if (result.error) {
-    console.error(`Error parsing regex: ${result.error}`)
-  } else {
-    console.log(`Successfully parsed regex: '${regex}'`)
-    console.log('Generated steps:')
-    result.steps.forEach((step, index) => {
-      console.log(`Step ${index + 1}: ${step.explanation}`)
-    })
-  }
-}
+// // test function that stores a regex and prints the AST 
+// function testParse(regex: string): void {
+//   const result = buildThompsonSteps(regex)
+//   if (result.error) {
+//     console.error(`Error parsing regex: ${result.error}`)
+//   } else {
+//     console.log(`Successfully parsed regex: '${regex}'`)
+//     console.log('Generated steps:')
+//     result.steps.forEach((step, index) => {
+//       console.log(`Step ${index + 1}: ${step.explanation}`)
+//     })
+//   }
+// }
 

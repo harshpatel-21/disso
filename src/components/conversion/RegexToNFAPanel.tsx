@@ -23,6 +23,18 @@ function RegexHighlight({ regex, start, end }: { regex: string; start: number; e
   )
 }
 
+export function exportFinalNFA(finalStep?: { nfaAfter: { states: unknown[]; transitions: unknown[] } }) {
+  if (!finalStep) return
+  const json = JSON.stringify(finalStep.nfaAfter, null, 2)
+  const blob = new Blob([json], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `nfa.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 // ---- Template option labels ----
 
 const TEMPLATE_LABELS: Record<ThompsonTemplate, { label: string; description: string }> = {
@@ -168,17 +180,7 @@ export function RegexToNFAPanel() {
   if (phase === 'complete') {
     const finalStep = steps[steps.length - 1]
 
-    const handleExportFinal = () => {
-      if (!finalStep) return
-      const json = JSON.stringify(finalStep.nfaAfter, null, 2)
-      const blob = new Blob([json], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `nfa.json`
-      a.click()
-      URL.revokeObjectURL(url)
-    }
+    const handleExportFinal = () => exportFinalNFA(finalStep)
 
     return (
       <div className="flex flex-col gap-4 p-4">

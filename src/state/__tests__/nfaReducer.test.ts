@@ -237,6 +237,13 @@ describe('nfaReducer — SET_NFA_TO_REGEX_PHASE', () => {
   })
 })
 
+describe('nfaReducer — default case', () => {
+  it('returns the same state reference for an unknown action type', () => {
+    const next = nfaReducer(initialNFAState, { type: 'UNKNOWN_ACTION' } as never)
+    expect(next).toBe(initialNFAState)
+  })
+})
+
 describe('nfaReducer — SELECT_STATE / SELECT_TRANSITION', () => {
   it('sets selectedStateId to the given id', () => {
     // Act

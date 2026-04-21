@@ -83,6 +83,25 @@ describe('Sidebar — NFA-to-Regex converting phase', () => {
 })
 
 describe('Sidebar — resize handle', () => {
+  it('does not change width when pointer moves without a prior pointer-down', () => {
+    const { container } = renderApp()
+    const aside = container.querySelector('aside')!
+    const initialWidth = parseInt(aside.style.width)
+    const handle = container.querySelector('.cursor-col-resize') as HTMLElement
+    handle.setPointerCapture = vi.fn()
+    handle.releasePointerCapture = vi.fn()
+
+    // No pointerDown first — dragging.current stays false → early return
+    handle.addEventListener(
+      'pointermove',
+      (e) => { Object.defineProperty(e, 'movementX', { value: 50 }) },
+      { capture: true, once: true }
+    )
+    fireEvent.pointerMove(handle, { pointerId: 1 })
+
+    expect(parseInt(aside.style.width)).toBe(initialWidth)
+  })
+
   it('adjusts sidebar width when pointer drag is performed on the resize handle', () => {
     // Arrange
     const { container } = renderApp()

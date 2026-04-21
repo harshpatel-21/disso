@@ -2,8 +2,22 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from '../../App'
+import { useAppContext } from '../../state/AppContext'
 
 // All heavy dependencies (ReactFlow, framer-motion) are mocked in src/test/setup.ts.
+
+function AppContextConsumer() {
+  useAppContext()
+  return null
+}
+
+describe('AppContext — useAppContext outside provider', () => {
+  it('throws when used outside AppProvider', () => {
+    expect(() => render(<AppContextConsumer />)).toThrow(
+      /useAppContext must be used within an AppProvider/i
+    )
+  })
+})
 
 describe('App — root render', () => {
 

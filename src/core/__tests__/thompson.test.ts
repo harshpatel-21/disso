@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { buildThompsonSteps, printAST, testParse } from '../thompson'
+import { buildThompsonSteps } from '../thompson'
 import { EPSILON } from '../types'
 
 afterEach(() => {
@@ -36,36 +36,6 @@ describe('buildThompsonSteps — error handling', () => {
   it('returns an unexpected-end error for incomplete expressions like "a+"', () => {
     const { error } = buildThompsonSteps('a+')
     expect(error).toMatch(/Unexpected end of expression/i)
-  })
-})
-
-describe('debug utilities', () => {
-  it('printAST logs node structure without throwing', () => {
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined)
-    const { steps } = buildThompsonSteps('a')
-    const step = steps[0]!
-
-    const pseudoAst = {
-      type: 'symbol' as const,
-      char: 'a',
-      start: step.subExprStart,
-      end: step.subExprEnd,
-    }
-
-    expect(() => printAST(pseudoAst)).not.toThrow()
-    expect(logSpy).toHaveBeenCalled()
-  })
-
-  it('testParse logs success path for valid regex', () => {
-    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined)
-    testParse('ab')
-    expect(logSpy).toHaveBeenCalled()
-  })
-
-  it('testParse logs error path for invalid regex', () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined)
-    testParse('@')
-    expect(errorSpy).toHaveBeenCalled()
   })
 })
 

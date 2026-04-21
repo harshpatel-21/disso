@@ -289,6 +289,13 @@ describe('NFAInputPanel — import/export handlers', () => {
     expect(await screen.findByText(/Failed to parse NFA file/i)).toBeInTheDocument()
   })
 
+  it('does nothing when the file input fires with no file selected', () => {
+    render(<NFAInputPanel />, { wrapper: Wrapper })
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    fireEvent.change(fileInput, { target: { files: [] } })
+    expect(screen.queryByText(/imported/i)).not.toBeInTheDocument()
+  })
+
   it('shows an error for imported JSON missing required fields', async () => {
     class FileReaderMock {
       onload: ((event: { target: { result: string } }) => void) | null = null

@@ -119,6 +119,17 @@ describe('useNFA — updateTransition', () => {
   })
 })
 
+describe('useNFA — resetNFA', () => {
+  it('clears all NFA state back to initial', () => {
+    const { result } = renderHook(() => useNFA(), { wrapper: Wrapper })
+    act(() => { result.current.addState() })
+    expect(result.current.nfa.states).toHaveLength(1)
+
+    act(() => { result.current.resetNFA() })
+    expect(result.current.nfa.states).toHaveLength(0)
+  })
+})
+
 describe('useNFA — removeSymbolFromAlphabet', () => {
   it('removes the specified symbol from the alphabet', () => {
     // Arrange

@@ -1,7 +1,7 @@
 /**
  * This file was written by AI
  */
-import { useState, useCallback, createContext, useContext, type ReactNode } from 'react'
+import { useState, useCallback, createContext, useContext, type ReactNode, useRef, useEffect } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 interface Notification {
@@ -26,13 +26,23 @@ let notifCounter = 0
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const timersRef = useRef<number[]>([])
 
   const notify = useCallback((message: string, type: Notification['type'] = 'info') => {
     const id = `notif_${notifCounter++}`
     setNotifications((prev) => [...prev, { id, message, type }])
-    setTimeout(() => {
+    const timer = (typeof window !== 'undefined' ? window.setTimeout : setTimeout)(() => {
       setNotifications((prev) => prev.filter((n) => n.id !== id))
-    }, 3000)
+      timersRef.current = timersRef.current.filter((t) => t !== timer as number)
+    }, 3000) as unknown as number
+    timersRef.current.push(timer)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach((t) => clearTimeout(t))
+      timersRef.current = []
+    }
   }, [])
 
   return (

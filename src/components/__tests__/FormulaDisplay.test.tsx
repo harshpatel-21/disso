@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AppProvider } from '../../state/AppContext'
 import { NotificationProvider } from '../layout/NotificationArea'
@@ -104,5 +104,14 @@ describe('FormulaDisplay — info tooltips', () => {
     await userEvent.click(infoBtns[1]!)
     expect(screen.queryByText(/Transition from q0 to q1/i)).not.toBeInTheDocument()
     expect(screen.getByText(/Self-loop on q1/i)).toBeInTheDocument()
+  })
+})
+
+describe('FormulaDisplay — hover handlers', () => {
+  it('fires onMouseEnter and onMouseLeave on an R-value box without throwing', () => {
+    const { container } = render(<FormulaDisplay {...defaultProps} />, { wrapper: Wrapper })
+    const firstBox = container.querySelector('.relative') as HTMLElement
+    fireEvent.mouseEnter(firstBox)
+    fireEvent.mouseLeave(firstBox)
   })
 })

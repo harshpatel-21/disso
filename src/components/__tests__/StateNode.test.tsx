@@ -85,6 +85,15 @@ describe('StateNode — colour states', () => {
     expect(container.querySelector('.border-green-500')).not.toBeNull()
   })
 
+  it('applies blue-400 border when selected with no other highlight flags', () => {
+    const { container } = render(
+      <StateNode
+        {...makeProps({ label: 'q0', isStart: false, isFinal: false }, true)}
+      />
+    )
+    expect(container.querySelector('.border-blue-400')).not.toBeNull()
+  })
+
   it('applies amber border class when isNewlyAdded', () => {
     const { container } = render(
       <StateNode

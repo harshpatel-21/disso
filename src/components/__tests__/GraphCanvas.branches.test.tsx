@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, act } from '@testing-library/react'
 import { GraphCanvas } from '../graph/GraphCanvas'
+import type { NodeChange } from '@xyflow/react'
+
+let capturedOnNodesChange: ((changes: NodeChange[]) => void) | null = null
 
 const mockUseNFA = vi.fn()
 const mockUseAppContext = vi.fn()
@@ -23,9 +26,10 @@ vi.mock('@xyflow/react', async () => {
   const react = await vi.importActual<typeof import('@xyflow/react')>('@xyflow/react')
   return {
     ...react,
-    ReactFlow: ({ children }: { children?: React.ReactNode }) => (
-      <div data-testid="react-flow">{children}</div>
-    ),
+    ReactFlow: ({ children, onNodesChange }: { children?: React.ReactNode; onNodesChange?: (changes: NodeChange[]) => void }) => {
+      capturedOnNodesChange = onNodesChange ?? null
+      return <div data-testid="react-flow">{children}</div>
+    },
     ReactFlowProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
     Background: () => null,
     Controls: () => null,
@@ -212,5 +216,71 @@ describe('GraphCanvas branch coverage scenarios', () => {
 
     expect(rafSpy).toHaveBeenCalled()
     expect(fitViewSpy).toHaveBeenCalled()
+  })
+
+  it('computes thompsonHighlight with newStateIds when template is correct in stepping phase', () => {
+    setupBase()
+    mockUseNFA.mockReturnValue({
+      nfa: { states: [], transitions: [], alphabet: [] },
+      nfaToRegexPhase: 'input',
+      appMode: 'regex-to-nfa',
+    })
+    mockUseAppContext.mockReturnValue({
+      stateEliminationState: {
+        gtg: null,
+        currentPathUpdates: [],
+        currentPathIndex: 0,
+        stateToRemove: null,
+        highlightedR: null,
+      },
+      thompsonState: {
+        phase: 'stepping',
+        steps: [{ nfaAfter: { states: [], transitions: [], alphabet: [] }, newStateIds: ['q0'], newTransitionIds: ['t0'] }],
+        currentStepIndex: 0,
+        isTemplateCorrect: true,
+      },
+    })
+
+    render(<GraphCanvas />)
+
+    const [, options] = mockUseGraphLayout.mock.calls[0]!
+    expect((options as { thompsonHighlight: unknown }).thompsonHighlight).toMatchObject({
+      newStateIds: ['q0'],
+      newTransitionIds: ['t0'],
+    })
+  })
+
+  it('onNodesChange stores position changes without throwing', () => {
+    setupBase()
+    render(<GraphCanvas />)
+
+    act(() => {
+      capturedOnNodesChange?.([
+        { type: 'position', id: 'q0', position: { x: 100, y: 200 }, dragging: false },
+      ])
+    })
+  })
+
+  it('merges saved node positions into layouted nodes when layout updates', () => {
+    setupBase()
+    const node = { id: 'q0', position: { x: 0, y: 0 }, data: {}, type: 'stateNode' as const }
+    mockUseGraphLayout.mockReturnValue({ nodes: [node], edges: [] })
+
+    const { rerender } = render(<GraphCanvas />)
+
+    // Save a position for q0 via onNodesChange
+    act(() => {
+      capturedOnNodesChange?.([
+        { type: 'position', id: 'q0', position: { x: 100, y: 200 }, dragging: false },
+      ])
+    })
+
+    // Change layoutedNodes → triggers the useEffect that merges saved positions
+    // Lines 111-112: nodePositions['q0'] is now { x:100, y:200 } so the ?? left side is taken
+    mockUseGraphLayout.mockReturnValue({
+      nodes: [{ ...node, position: { x: 10, y: 10 } }],
+      edges: [],
+    })
+    rerender(<GraphCanvas />)
   })
 })

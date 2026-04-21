@@ -163,3 +163,10 @@ describe('thompsonReducer — RESET', () => {
     expect(next).toEqual(initialThompsonState)
   })
 })
+
+describe('thompsonReducer — default case', () => {
+  it('returns the same state reference for an unknown action type', () => {
+    const next = thompsonReducer(initialThompsonState, { type: 'UNKNOWN_ACTION' } as never)
+    expect(next).toBe(initialThompsonState)
+  })
+})
