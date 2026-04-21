@@ -150,3 +150,31 @@ describe('NFAInputPanel — examples panel', () => {
     expect(screen.getByRole('button', { name: /Load Examples/i })).toBeInTheDocument()
   })
 })
+
+describe('NFAInputPanel — selected state panel', () => {
+  it('shows Set Start and Set Final buttons after clicking a state row in the table', async () => {
+    // Arrange
+    render(<NFAInputPanel />, { wrapper: Wrapper })
+    await userEvent.click(screen.getByRole('button', { name: /\+ State/i }))
+
+    // Act — click the state row in the transition table to select it
+    await userEvent.click(screen.getByText('q0'))
+
+    // Assert
+    expect(screen.getByRole('button', { name: /★ Start|Set Start/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /◉ Final|Set Final/i })).toBeInTheDocument()
+  })
+
+  it('toggles isFinal when "Set Final" is clicked', async () => {
+    // Arrange
+    render(<NFAInputPanel />, { wrapper: Wrapper })
+    await userEvent.click(screen.getByRole('button', { name: /\+ State/i }))
+    await userEvent.click(screen.getByText('q0'))
+
+    // Act
+    await userEvent.click(screen.getByRole('button', { name: /Set Final/i }))
+
+    // Assert — button text changes to ◉ Final after toggle
+    expect(screen.getByRole('button', { name: /◉ Final/i })).toBeInTheDocument()
+  })
+})
