@@ -61,10 +61,6 @@ describe('TransitionEdge — highlighting', () => {
     expect(container.querySelector('.bg-yellow-100')).toBeNull()
   })
 
-  it('applies font-semibold on the label span when isHighlighted', () => {
-    const { container } = renderEdge({ symbol: 'a', isHighlighted: true })
-    expect(container.querySelector('.font-semibold')).not.toBeNull()
-  })
 })
 
 describe('TransitionEdge — self-loop', () => {

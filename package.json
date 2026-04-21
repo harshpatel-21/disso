@@ -2,10 +2,13 @@
   "name": "nfa-to-regex-converter",
   "private": true,
   "version": "1.0.0",
+  "homepage": "https://harshpatel-21.github.io/nfa-regex",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -26,6 +29,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/coverage-v8": "^3.2.4",
+    "gh-pages": "^6.3.0",
     "jsdom": "^26.1.0",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",

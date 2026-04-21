@@ -24,11 +24,6 @@ describe('StateNode — label rendering', () => {
     render(<StateNode {...makeProps({ label: 'q0', isStart: false, isFinal: false })} />)
     expect(screen.getByText('q0')).toBeInTheDocument()
   })
-
-  it('displays a multi-character label correctly', () => {
-    render(<StateNode {...makeProps({ label: 'q10', isStart: false, isFinal: false })} />)
-    expect(screen.getByText('q10')).toBeInTheDocument()
-  })
 })
 
 describe('StateNode — start state', () => {

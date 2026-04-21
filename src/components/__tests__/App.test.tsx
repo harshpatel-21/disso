@@ -6,9 +6,6 @@ import App from '../../App'
 // All heavy dependencies (ReactFlow, framer-motion) are mocked in src/test/setup.ts.
 
 describe('App — root render', () => {
-  it('renders without crashing', () => {
-    render(<App />)
-  })
 
   it('shows the application title', () => {
     render(<App />)

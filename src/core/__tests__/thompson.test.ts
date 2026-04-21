@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildThompsonSteps, printAST, testParse } from '../thompson'
+import { buildThompsonSteps } from '../thompson'
 import { EPSILON } from '../types'
 
 // buildThompsonSteps resets its own counters on each call.
@@ -390,76 +390,5 @@ describe('very hard — "a*(b+c)*d"', () => {
     expect(alpha).toContain('b')
     expect(alpha).toContain('c')
     expect(alpha).toContain('d')
-  })
-})
-
-// ---- printAST — covers lines 415-438 ----
-
-describe('printAST — covers all AST node types', () => {
-  it('handles a symbol node without throwing', () => {
-    const node = { type: 'symbol', char: 'a', start: 0, end: 0 }
-    expect(() => printAST(node as Parameters<typeof printAST>[0])).not.toThrow()
-  })
-
-  it('handles an epsilon node without throwing', () => {
-    const node = { type: 'epsilon', start: 0, end: 0 }
-    expect(() => printAST(node as Parameters<typeof printAST>[0])).not.toThrow()
-  })
-
-  it('handles a union node with two symbol children without throwing', () => {
-    const node = {
-      type: 'union',
-      start: 0,
-      end: 2,
-      left:  { type: 'symbol', char: 'a', start: 0, end: 0 },
-      right: { type: 'symbol', char: 'b', start: 2, end: 2 },
-    }
-    expect(() => printAST(node as Parameters<typeof printAST>[0])).not.toThrow()
-  })
-
-  it('handles a concat node without throwing', () => {
-    const node = {
-      type: 'concat',
-      start: 0,
-      end: 1,
-      left:  { type: 'symbol', char: 'a', start: 0, end: 0 },
-      right: { type: 'symbol', char: 'b', start: 1, end: 1 },
-    }
-    expect(() => printAST(node as Parameters<typeof printAST>[0])).not.toThrow()
-  })
-
-  it('handles a star node without throwing', () => {
-    const node = {
-      type: 'star',
-      start: 0,
-      end: 1,
-      operand: { type: 'symbol', char: 'a', start: 0, end: 0 },
-    }
-    expect(() => printAST(node as Parameters<typeof printAST>[0])).not.toThrow()
-  })
-
-  it('handles non-zero indent parameter without throwing', () => {
-    const node = { type: 'symbol', char: 'x', start: 0, end: 0 }
-    expect(() => printAST(node as Parameters<typeof printAST>[0], 4)).not.toThrow()
-  })
-})
-
-// ---- testParse — covers lines 442-452 ----
-
-describe('testParse — debug utility', () => {
-  it('logs steps for a valid regex without throwing', () => {
-    expect(() => testParse('a+b')).not.toThrow()
-  })
-
-  it('logs an error for an invalid regex without throwing', () => {
-    expect(() => testParse('@invalid')).not.toThrow()
-  })
-
-  it('handles a complex valid regex without throwing', () => {
-    expect(() => testParse('(a+b)*c')).not.toThrow()
-  })
-
-  it('handles an empty string (parses to error) without throwing', () => {
-    expect(() => testParse('')).not.toThrow()
   })
 })

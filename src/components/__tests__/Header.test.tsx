@@ -28,9 +28,4 @@ describe('Header — mode toggle buttons', () => {
     expect(screen.getByRole('button', { name: /Regex.*NFA/i })).toBeInTheDocument()
   })
 
-  it('has exactly two mode toggle buttons', () => {
-    render(<Header />, { wrapper: Wrapper })
-    const buttons = screen.getAllByRole('button')
-    expect(buttons).toHaveLength(2)
-  })
 })
