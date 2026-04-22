@@ -47,6 +47,9 @@ export const initialStateEliminationState: StateEliminationState = {
   highlightedR: null,
 }
 
+/** 
+ * Reducer managing state elimination phase, GTG, path updates, history, and revert logic. 
+ */
 export function stateEliminationReducer(
   state: StateEliminationState,
   action: StateEliminationAction

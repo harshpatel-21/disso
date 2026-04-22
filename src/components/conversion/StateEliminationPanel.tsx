@@ -7,6 +7,10 @@ import { StateSelector } from './StateSelector'
 import { PathUpdateForm } from './PathUpdateForm'
 import { Button } from '../common/Button'
 
+/**
+ * Sidebar panel driving the NFA→Regex state elimination flow.
+ * Switches between state selection, path-update input, step-complete confirmation, and finished phases.
+ */
 export function StateEliminationPanel() {
   const {
     phase,

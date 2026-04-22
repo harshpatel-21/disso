@@ -12,6 +12,10 @@ import { examples } from '../../data/examples'
 import { EPSILON } from '../../core/types'
 import type { NFA } from '../../core/types'
 
+/**
+ * Sidebar panel for building the input NFA.
+ * Manages states, alphabet symbols, import/export, and triggering the NFA→Regex conversion.
+ */
 export function NFAInputPanel() {
   const {
     nfa,
@@ -32,6 +36,7 @@ export function NFAInputPanel() {
   const [newSymbol, setNewSymbol] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  /** Serialize the current NFA to JSON and trigger a browser file download. */
   const handleExport = () => {
     const json = JSON.stringify(nfa, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
@@ -43,6 +48,7 @@ export function NFAInputPanel() {
     URL.revokeObjectURL(url)
   }
 
+  /** Read an NFA from a JSON file and load it into state, showing a notification on success or error. */
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -64,6 +70,7 @@ export function NFAInputPanel() {
     e.target.value = ''
   }
 
+  /** Validate the NFA and start state elimination if validation passes. */
   const handleStartConversion = () => {
     const errors = validate()
     if (errors.length > 0) {
@@ -74,6 +81,7 @@ export function NFAInputPanel() {
     notify('Conversion started — preprocessing complete', 'success')
   }
 
+  /** Add the typed symbol to the alphabet if it is valid and not already present. */
   const handleAddSymbol = () => {
     const sym = newSymbol.trim()
     if (sym && sym !== EPSILON && !nfa.alphabet.includes(sym)) {

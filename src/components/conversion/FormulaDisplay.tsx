@@ -24,6 +24,10 @@ interface FormulaDisplayProps {
   removedStateLabel: string
 }
 
+/**
+ * Display the four R-values for the current elimination path alongside the elimination formula.
+ * Hovering an R-value fires setHighlightedR to highlight the corresponding edge on the graph.
+ */
 export function FormulaDisplay({
   R1,
   R2,

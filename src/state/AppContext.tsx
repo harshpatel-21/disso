@@ -35,6 +35,9 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | null>(null)
 
+/** 
+ * Provide NFA, state elimination, and Thompson state to the component tree. 
+ */
 export function AppProvider({ children }: { children: ReactNode }) {
   const [nfaState, nfaDispatch] = useReducer(nfaReducer, initialNFAState)
   const [stateEliminationState, stateEliminationDispatch] = useReducer(

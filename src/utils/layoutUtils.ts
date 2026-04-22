@@ -4,6 +4,11 @@ import type { Node, Edge } from '@xyflow/react'
 const NODE_WIDTH = 80
 const NODE_HEIGHT = 80
 
+/**
+ * Run dagre layout on nodes and edges, using a BFS spanning tree from the start node
+ * to avoid the cycle-breaking artifacts that occur when all edges are fed to dagre.
+ * Returns nodes with computed x/y positions.
+ */
 export function getLayoutedElements(
   nodes: Node[],
   edges: Edge[],

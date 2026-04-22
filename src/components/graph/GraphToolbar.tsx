@@ -5,6 +5,9 @@
 import { useReactFlow } from '@xyflow/react'
 import { Button } from '../common/Button'
 
+/** 
+ * Floating toolbar that provides a button to fit all graph nodes into the viewport. 
+ */
 export function GraphToolbar() {
   const { fitView } = useReactFlow()
 

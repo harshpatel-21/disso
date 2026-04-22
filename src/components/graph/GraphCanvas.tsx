@@ -23,6 +23,10 @@ import { TransitionEdge } from './TransitionEdge'
 import { GraphToolbar } from './GraphToolbar'
 import { EdgeBendContext } from './EdgeBendContext'
 
+/**
+ * Inner React Flow canvas. Decides which NFA or GTG snapshot to display based on the current mode
+ * and maps it to positioned nodes and edges, including highlight coloring for elimination and Thompson steps.
+ */
 function GraphCanvasInner() {
   const { nfa, nfaToRegexPhase, appMode } = useNFA()
   const { stateEliminationState, thompsonState } = useAppContext()
@@ -206,6 +210,9 @@ function GraphCanvasInner() {
   )
 }
 
+/** 
+ * Wrap GraphCanvasInner in a ReactFlowProvider so hooks like useReactFlow work inside it. 
+ */
 export function GraphCanvas() {
   return (
     <ReactFlowProvider>

@@ -16,6 +16,10 @@ interface PathUpdateFormProps {
   gtg: GTG | null
 }
 
+/**
+ * Form for a single path update during state elimination.
+ * Shows the elimination formula with R-values, accepts a user regex answer, and provides auto-complete.
+ */
 export function PathUpdateForm({
   pathUpdate,
   pathIndex,

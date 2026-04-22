@@ -5,6 +5,9 @@
 import { useStateElimination } from '../../hooks/useStateElimination'
 import { Button } from '../common/Button'
 
+/** 
+ * Display buttons for each eliminable state and an auto-pick option that selects the state with the fewest transitions. 
+ */
 export function StateSelector() {
   const { eliminableStates, gtg, selectStateToRemove } = useStateElimination()
 

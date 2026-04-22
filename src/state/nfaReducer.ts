@@ -45,6 +45,9 @@ export const initialNFAState: NFAState = {
   validationErrors: [],
 }
 
+/** 
+ * Reducer handling all NFA mutations, mode changes, and selection state. 
+ */
 export function nfaReducer(state: NFAState, action: NFAAction): NFAState {
   switch (action.type) {
     case 'ADD_STATE':

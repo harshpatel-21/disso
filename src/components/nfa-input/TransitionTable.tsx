@@ -8,6 +8,10 @@ import { useAppContext } from '../../state/AppContext'
 import { EPSILON } from '../../core/types'
 import type { StateId } from '../../core/types'
 
+/**
+ * Render the NFA transition table. Rows are states, columns are alphabet symbols plus ε.
+ * Clicking a row selects the state; cells allow adding and removing individual transitions.
+ */
 export function TransitionTable() {
   const { nfa, selectedStateId, addTransition, removeTransition, updateState } =
     useNFA()
@@ -15,6 +19,7 @@ export function TransitionTable() {
 
   const columns = [...nfa.alphabet, EPSILON]
 
+  /** Return all transitions from a given state on a given symbol. */
   const getTargets = (stateId: StateId, symbol: string) => {
     return nfa.transitions.filter(
       (t) => t.source === stateId && t.symbol === symbol
@@ -110,6 +115,7 @@ interface TransitionCellProps {
   onRemove: (transitionId: string) => void
 }
 
+/** Table cell showing the target states for one (source, symbol) pair with add/remove controls. */
 function TransitionCell({
   targets,
   allStates,
@@ -182,6 +188,7 @@ function TransitionCell({
   )
 }
 
+/** Inline-editable state label; double-click to edit, blur or Enter to confirm. */
 function EditableLabel({
   value,
   onChange,

@@ -16,6 +16,9 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | null>(null)
 
+/** 
+ * Access the notify function from within a NotificationProvider. 
+ */
 export function useNotification() {
   const ctx = useContext(NotificationContext)
   if (!ctx) throw new Error('useNotification must be used within NotificationProvider')
@@ -24,10 +27,15 @@ export function useNotification() {
 
 let notifCounter = 0
 
+/**
+ * Context provider that renders a toast stack at the bottom-right of the screen
+ * and exposes a notify function to push temporary messages.
+ */
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const timersRef = useRef<number[]>([])
 
+  // Push a notification that auto-dismisses after 3 seconds
   const notify = useCallback((message: string, type: Notification['type'] = 'info') => {
     const id = `notif_${notifCounter++}`
     setNotifications((prev) => [...prev, { id, message, type }])

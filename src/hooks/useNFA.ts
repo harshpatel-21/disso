@@ -4,6 +4,9 @@ import type { State, Transition, NFA, AppMode } from '../core/types'
 import { generateStateId, generateTransitionId, nextStateLabel } from '../core/nfa'
 import { validateNFA } from '../core/validation'
 
+/** 
+ * Hook that exposes NFA state and all mutation actions via the AppContext. 
+ */
 export function useNFA() {
   const { nfaState, nfaDispatch } = useAppContext()
 
@@ -32,6 +35,7 @@ export function useNFA() {
     [nfaDispatch]
   )
 
+  // Update a state's properties, clearing other start states if isStart is being set.
   const updateState = useCallback(
     (id: string, updates: Partial<State>) => {
       // If setting as start, clear other start states

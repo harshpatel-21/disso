@@ -18,6 +18,10 @@ export interface StateNodeData {
 
 type StateNodeProps = NodeProps & { data: StateNodeData }
 
+/**
+ * Custom React Flow node rendering a state circle with start/final indicators.
+ * Border and background color reflect highlight state (being eliminated, predecessor, successor, newly added).
+ */
 function StateNodeComponent({ data, selected }: StateNodeProps) {
   const {
     label,

@@ -9,6 +9,9 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string
 }
 
+/** 
+ * Labeled text input with optional inline error message. 
+*/
 export function Input({ label, error, className = '', ...props }: InputProps) {
   return (
     <div className="flex flex-col gap-1">

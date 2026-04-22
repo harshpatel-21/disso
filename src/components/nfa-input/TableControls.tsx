@@ -7,6 +7,7 @@ import { useNFA } from '../../hooks/useNFA'
 import { Button } from '../common/Button'
 import { EPSILON } from '../../core/types'
 
+/** Controls for adding/removing states and alphabet symbols, and toggling start/final on the selected state. */
 export function TableControls() {
   const {
     nfa,
@@ -20,6 +21,7 @@ export function TableControls() {
   } = useNFA()
   const [newSymbol, setNewSymbol] = useState('')
 
+  /** Add the typed symbol to the alphabet if it is valid and not already present. */
   const handleAddSymbol = () => {
     const sym = newSymbol.trim()
     if (sym && sym !== EPSILON && !nfa.alphabet.includes(sym)) {

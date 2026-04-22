@@ -29,6 +29,10 @@ const R_COLORS: Record<string, string> = {
 
 const THOMPSON_NEW_COLOR = '#f59e0b' // amber-500
 
+/**
+ * Convert an NFA or GTG into positioned React Flow nodes and edges.
+ * Applies R-value highlight coloring during state elimination and amber highlights for newly added Thompson states/transitions.
+ */
 export function useGraphLayout(
   nfaOrGtg: NFA | GTG | null,
   options: GraphLayoutOptions = {}

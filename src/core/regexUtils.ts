@@ -97,6 +97,9 @@ function needsParensForStar(expr: string): boolean {
   return true
 }
 
+/** 
+ * Return true if the expression contains a '+' at depth 0 (not inside parentheses). 
+ */
 function hasTopLevelUnion(expr: string): boolean {
   let depth = 0
   for (let i = 0; i < expr.length; i++) {
@@ -108,7 +111,9 @@ function hasTopLevelUnion(expr: string): boolean {
   return false
 }
 
-// Find the index of the matching closing parenthesis based on the index
+/** 
+ * Find the index of the matching closing parenthesis based on the index
+ */
 function findMatchingParen(expr: string, openIndex: number): number {
   let depth = 0
   for (let i = openIndex; i < expr.length; i++) {
@@ -122,6 +127,9 @@ function findMatchingParen(expr: string, openIndex: number): number {
   return -1
 }
 
+/** 
+ * Repeatedly strip matched outer parentheses until none remain. 
+ */
 function stripOuterParens(expr: string): string {
   while (
     expr.length >= 2 &&

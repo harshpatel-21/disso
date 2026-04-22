@@ -2,6 +2,9 @@ import { useCallback } from 'react'
 import { useAppContext } from '../state/AppContext'
 import type { ThompsonTemplate } from '../core/types'
 
+/** 
+ * Hook that exposes Thompson's Construction state and step-navigation actions. 
+ */
 export function useThompson() {
   const { thompsonState, thompsonDispatch } = useAppContext()
 
@@ -10,11 +13,13 @@ export function useThompson() {
     [thompsonDispatch]
   )
 
+  // Parse the regex and generate all Thompson construction steps.
   const startConstruction = useCallback(
     (regex: string) => thompsonDispatch({ type: 'START', payload: regex }),
     [thompsonDispatch]
   )
 
+  // Record the user's template guess for the current step and check correctness.
   const selectTemplate = useCallback(
     (template: ThompsonTemplate) =>
       thompsonDispatch({ type: 'SELECT_TEMPLATE', payload: template }),

@@ -24,6 +24,10 @@ export interface TransitionEdgeData {
 
 type TransitionEdgeProps = EdgeProps & { data?: TransitionEdgeData }
 
+/**
+ * Custom React Flow edge that renders a transition symbol label.
+ * Draws a cubic loop path for self-transitions and a draggable quadratic bezier for regular edges.
+ */
 function TransitionEdgeComponent({
   id,
   sourceX,

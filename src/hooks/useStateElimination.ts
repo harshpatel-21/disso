@@ -10,10 +10,14 @@ import {
   getEliminableStates,
 } from '../core/stateElimination'
 
+/** 
+ * Hook that exposes state elimination state and the step-by-step conversion actions. 
+ */
 export function useStateElimination() {
   const { nfaState, nfaDispatch, stateEliminationState, stateEliminationDispatch } =
     useAppContext()
 
+  // Convert the current NFA to a GTG and automatically run the preprocessing step.
   const startConversion = useCallback(() => {
     const gtg = nfaToGTG(nfaState.nfa)
     stateEliminationDispatch({ type: 'START_CONVERSION', payload: gtg })

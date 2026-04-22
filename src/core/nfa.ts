@@ -151,6 +151,7 @@ export function cloneNFA<T extends NFA>(nfa: T): T {
   }
 }
 
+/** Create an NFA with no states, transitions, or alphabet symbols. */
 export function createEmptyNFA(): NFA {
   return {
     states: [],

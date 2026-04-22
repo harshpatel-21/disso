@@ -12,21 +12,25 @@ const MIN_WIDTH = 280
 const MAX_WIDTH = 700
 const DEFAULT_WIDTH = 400
 
+/** Resizable sidebar that renders the appropriate panel based on the current app mode and conversion phase. */
 export function Sidebar() {
   const { appMode, nfaToRegexPhase } = useNFA()
   const [width, setWidth] = useState(DEFAULT_WIDTH)
   const dragging = useRef(false)
 
+  /** Start a sidebar resize drag. */
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     dragging.current = true
     e.currentTarget.setPointerCapture(e.pointerId)
   }, [])
 
+  /** Update the sidebar width within its min/max bounds while dragging. */
   const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragging.current) return
     setWidth((prev) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, prev + e.movementX)))
   }, [])
 
+  /** Release pointer capture and end the resize drag. */
   const onPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     dragging.current = false
     e.currentTarget.releasePointerCapture(e.pointerId)

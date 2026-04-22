@@ -4,6 +4,7 @@ import { Header } from './components/layout/Header'
 import { Sidebar } from './components/layout/Sidebar'
 import { GraphCanvas } from './components/graph/GraphCanvas'
 
+/** Root component composing the providers, header, sidebar, and graph canvas. */
 function App() {
   return (
     <AppProvider>

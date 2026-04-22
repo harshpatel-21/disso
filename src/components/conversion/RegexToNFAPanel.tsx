@@ -10,6 +10,7 @@ import { regexExamples } from '../../data/regexExamples'
 
 // ---- Regex span highlighter ----
 
+/** Render the full regex string with the current sub-expression highlighted in amber. */
 function RegexHighlight({ regex, start, end }: { regex: string; start: number; end: number }) {
   const before = regex.slice(0, start)
   const match = regex.slice(start, end + 1)
@@ -23,6 +24,7 @@ function RegexHighlight({ regex, start, end }: { regex: string; start: number; e
   )
 }
 
+/** Serialize the final NFA to JSON and trigger a browser file download. */
 export function exportFinalNFA(finalStep?: { nfaAfter: { states: unknown[]; transitions: unknown[] } }) {
   if (!finalStep) return
   const json = JSON.stringify(finalStep.nfaAfter, null, 2)
@@ -49,6 +51,7 @@ const ALL_TEMPLATES: ThompsonTemplate[] = ['symbol', 'epsilon', 'union', 'concat
 
 // ---- Transition table display ----
 
+/** Render the list of transitions added in the current Thompson step as a small from/symbol/to table. */
 function TransitionTable({
   rows,
 }: {
@@ -78,6 +81,10 @@ function TransitionTable({
 
 // ---- Main panel ----
 
+/**
+ * Sidebar panel for Thompson's Construction.
+ * Handles regex input, step-by-step template identification, and completion/export.
+ */
 export function RegexToNFAPanel() {
   const {
     phase,
@@ -98,10 +105,12 @@ export function RegexToNFAPanel() {
   const [localRegex, setLocalRegex] = useState('')
   const [showExamples, setShowExamples] = useState(false)
 
+  // start the construction process with the provided regex
   const handleStart = () => {
     if (localRegex.trim()) startConstruction(localRegex.trim())
   }
 
+  // stop construction and reset local input state, but keep the same regex in case user wants to review steps or export final NFA
   const handleReset = () => {
     reset()
     setLocalRegex('')

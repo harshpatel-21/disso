@@ -31,6 +31,9 @@ export const initialThompsonState: ThompsonState = {
   error: null,
 }
 
+/** 
+ * Reducer managing Thompson's Construction phase, step navigation, and template selection. 
+ */
 export function thompsonReducer(
   state: ThompsonState,
   action: ThompsonAction

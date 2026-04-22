@@ -29,6 +29,7 @@ const sizeClasses: Record<Size, string> = {
   lg: 'px-4 py-2 text-base',
 }
 
+/** Generic button with variant (primary/secondary/danger/ghost) and size (sm/md/lg) props. */
 export function Button({
   variant = 'primary',
   size = 'md',
