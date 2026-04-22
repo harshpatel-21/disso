@@ -193,8 +193,7 @@ export function StateEliminationPanel() {
               <div className="flex flex-col gap-1">
                 {currentPathUpdates.map((path) => {
                   const fromLabel =
-                    gtg?.states.find((s) => s.id === path.from)?.label ??
-                    path.from;
+                    gtg?.states.find((s) => s.id === path.from)?.label ?? path.from;
                   const toLabel =
                     gtg?.states.find((s) => s.id === path.to)?.label ?? path.to;
                   return (
