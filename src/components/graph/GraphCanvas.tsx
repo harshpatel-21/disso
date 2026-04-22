@@ -1,7 +1,8 @@
 /**
- * AI assistance was used for graph-specific React Flow command wiring
+ * AI assistance was heavily used for graph-specific React Flow command wiring
  * (fit view, connect handlers, and edge/node interaction flow) and for
- * visual styling behavior like highlighted paths and edge emphasis.
+ * visual styling behavior like highlighted paths, edge emphasis, and
+ * re-positioned nodes persistence.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
